@@ -4,11 +4,15 @@ const OFFLINE_URL = '/';
 
 const STATIC_CACHE_URLS = [
   '/',
-  '/static/css/main.css',
-  '/static/js/main.js',
-  '/static/manifest.json',
   '/static/icons/icon-192x192.png',
-  '/static/icons/icon-512x512.png'
+  '/static/icons/icon-180x180.png',
+  '/static/icons/icon-512x512.png',
+  '/static/icons/icon-152x152.png',
+  '/static/icons/icon-144x144.png',
+  '/static/icons/icon-128x128.png',
+  '/static/icons/icon-96x96.png',
+  '/static/icons/icon-72x72.png',
+  '/static/icons/icon-384x384.png',
 ];
 
 // Install event
