@@ -1,0 +1,23 @@
+{
+  "read_hadiths": [],
+  "favorites": [],
+  "notes": {},
+  "quiz_scores": [],
+  "study_plan": [],
+  "last_daily": null,
+  "interaction_count": 0,
+  "last_support_reminder": null,
+  "reminder_enabled": true,
+  "reminder_time": "08:00",
+  "reminder_time_evening": null,
+  "reminder_timezone": "Asia/Riyadh",
+  "last_reminder_sent": null,
+  "last_reminder_evening": null,
+  "streak_count": 0,
+  "streak_last_date": null,
+  "streak_best": 0,
+  "flashcard_count": 0,
+  "earned_badges": [],
+  "weekly_reads": {},
+  "self_assessment": {}
+}
