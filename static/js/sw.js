@@ -12,6 +12,9 @@ const STATIC_ASSETS = [
   '/static/icons/icon-180x180.png',
   '/static/icons/icon-512x512.png',
   '/static/icons/icon-152x152.png',
+  '/static/icons/icon-144x144.png',
+  '/static/icons/icon-128x128.png',
+  '/static/icons/icon-96x96.png',
   '/static/icons/icon-72x72.png',
   '/static/icons/icon-384x384.png',
 ];
