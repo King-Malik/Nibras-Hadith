@@ -45,11 +45,6 @@ from zoneinfo import ZoneInfo
 
 import httpx
 from dotenv import load_dotenv
-try:
-    from supabase import create_client as _supabase_create_client, Client as _SupabaseClient
-    _SUPABASE_AVAILABLE = True
-except ImportError:
-    _SUPABASE_AVAILABLE = False
 from telegram import Update, BotCommand, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.constants import ParseMode
 from telegram.ext import (
@@ -71,72 +66,8 @@ TELEGRAM_TOKEN: Optional[str] = os.getenv("TELEGRAM_TOKEN")
 GOOGLE_API_KEY: Optional[str] = os.getenv("GOOGLE_API_KEY")
 OPENROUTER_API_KEY: Optional[str] = os.getenv("OPENROUTER_API_KEY")
 DEVELOPER_TELEGRAM_ID: Optional[str] = os.getenv("DEVELOPER_TELEGRAM_ID")
-
-# ── Supabase (لحفظ بيانات المستخدمين بشكل دائم) ──────────────
-SUPABASE_URL: str = os.getenv("SUPABASE_URL", "")
-SUPABASE_KEY: str = os.getenv("SUPABASE_KEY", "")
-
-# ── Webhook ──────────────────────────────────────────────────
-# يقرأ WEBHOOK_URL أو WEBHOOK_BASE_URL (كلاهما مقبول)
-_raw_webhook = os.getenv("WEBHOOK_URL", "") or os.getenv("WEBHOOK_BASE_URL", "")
-WEBHOOK_URL: str  = _raw_webhook.rstrip("/")
-WEBHOOK_PORT: int = int(os.getenv("PORT", "10000"))  # Render يستخدم 10000 افتراضياً
-_tok_for_path   = os.getenv("TELEGRAM_TOKEN", "token")
-WEBHOOK_PATH: str = f"/webhook/{_tok_for_path}"
-
-# ── Rate Limiting ────────────────────────────────────────────
-RATE_LIMIT_WINDOW: int = 60   # ثانية
-RATE_LIMIT_MAX:    int = 20   # أقصى رسائل في الدقيقة
-
-
-# تهيئة عميل Supabase (None إذا لم تكن متغيرات البيئة مضبوطة)
-_supabase_client = None
-if _SUPABASE_AVAILABLE and SUPABASE_URL and SUPABASE_KEY:
-    try:
-        _supabase_client = _supabase_create_client(SUPABASE_URL, SUPABASE_KEY)
-        logger.info("✅ Supabase متصل — بيانات المستخدمين ستُحفظ بشكل دائم")
-    except Exception as _e:
-        logger.warning(f"⚠️ Supabase غير متاح، سيُستخدم التخزين المحلي: {_e}")
-else:
-    logger.warning("⚠️ SUPABASE_URL/KEY غير مضبوط — البيانات ستُحفظ محلياً فقط")
-
 # وضع الصيانة — يُفعَّل بأمر /admin_maintenance
 _maintenance_mode: bool = False
-
-# ── Rate Limiting (حماية من الإرسال الزائد) ─────────────────
-from collections import defaultdict
-_rate_limit_store: Dict[int, List[float]] = defaultdict(list)
-
-def check_rate_limit(user_id: int) -> bool:
-    """True = مسموح | False = تجاوز الحد"""
-    import time
-    now     = time.time()
-    window  = _rate_limit_store[user_id]
-    # احذف الطلبات القديمة خارج النافذة
-    _rate_limit_store[user_id] = [t for t in window if now - t < RATE_LIMIT_WINDOW]
-    if len(_rate_limit_store[user_id]) >= RATE_LIMIT_MAX:
-        return False
-    _rate_limit_store[user_id].append(now)
-    return True
-
-
-# ── Cache للأحاديث (يُخزن النصوص المُنسَّقة مؤقتاً) ─────────
-_hadith_cache: Dict[str, Any] = {}
-_cache_hits: int = 0
-
-def cache_get(key: str) -> Optional[Any]:
-    return _hadith_cache.get(key)
-
-def cache_set(key: str, value: Any) -> None:
-    global _hadith_cache
-    # حد أقصى 500 عنصر لتفادي استهلاك الذاكرة
-    if len(_hadith_cache) >= 500:
-        # احذف أقدم 100 عنصر
-        keys = list(_hadith_cache.keys())[:100]
-        for k in keys:
-            del _hadith_cache[k]
-    _hadith_cache[key] = value
-
 _maintenance_message: str = "🔧 البوت في وضع الصيانة حالياً، يرجى المحاولة لاحقاً."
 
 SUPPORT_LINK = "https://ko-fi.com/nibras_hadith"
@@ -321,38 +252,19 @@ class HadithDatabase:
     def get_all(self) -> List[Dict[str, Any]]:
         return self.hadiths
 
-    @staticmethod
-    def _normalize_arabic(text: str) -> str:
-        """تطبيع النص العربي: حذف التشكيل وتوحيد الأحرف المتشابهة"""
-        import unicodedata
-        # حذف التشكيل
-        text = "".join(c for c in text if not unicodedata.category(c) == "Mn")
-        # توحيد الهمزات
-        for src, dst in [("أ","ا"),("إ","ا"),("آ","ا"),("ة","ه"),("ى","ي"),("ؤ","و"),("ئ","ي")]:
-            text = text.replace(src, dst)
-        return text
-
     def search(self, keyword: str, limit: int = 20) -> List[Dict[str, Any]]:
         """
         بحث ذكي متقدم:
         - يدعم كلمات متعددة (كل الكلمات يجب أن تتواجد)
-        - يبحث في جميع الحقول
-        - Fuzzy: يتحمل الأخطاء الإملائية والتشكيل والهمزات
-        - يرتب النتائج حسب الصلة
+        - يبحث في جميع الحقول (عنوان، نص، راوي، مفردات، فوائد، مصدر، موضوعات)
+        - يرتب النتائج حسب الصلة (تطابق العنوان أولاً، ثم التطابق الكامل، ثم الجزئي)
         """
         kw = keyword.strip().lower()
         if not kw:
             return []
 
-        kw_norm  = self._normalize_arabic(kw)
-        words      = kw.split()
-        words_norm = kw_norm.split()
-
-        # cache key
-        cache_key = f"search:{kw}:{limit}"
-        cached = cache_get(cache_key)
-        if cached is not None:
-            return cached
+        # دعم البحث بكلمات متعددة
+        words = kw.split()
 
         scored = []
         for hadith in self.hadiths:
@@ -371,36 +283,27 @@ class HadithDatabase:
             ).lower()
 
             full_text = f"{title} {text} {narrator} {source} {topics} {vocabulary} {benefits}"
-            # نسخة مطبَّعة للـ fuzzy
-            full_norm = self._normalize_arabic(full_text)
 
-            # تحقق: كل الكلمات موجودة (عادي أو مطبَّع)
-            exact_match = all(w in full_text for w in words)
-            fuzzy_match = all(w in full_norm for w in words_norm)
-            if not exact_match and not fuzzy_match:
+            # تحقق أن كل كلمات البحث موجودة
+            if not all(w in full_text for w in words):
                 continue
-
-            title_norm = self._normalize_arabic(title)
-            text_norm  = self._normalize_arabic(text)
 
             # حساب درجة الصلة
             score = 0
-            if exact_match:                                    score += 20  # مكافأة تطابق حرفي
-            if kw in title or kw_norm in title_norm:          score += 100
-            if all(w in title_norm for w in words_norm):      score += 50
-            if kw in text or kw_norm in text_norm:            score += 30
-            if kw_norm in self._normalize_arabic(topics):     score += 20
-            if kw_norm in self._normalize_arabic(narrator):   score += 15
-            if kw_norm in self._normalize_arabic(vocabulary): score += 10
-            if kw_norm in self._normalize_arabic(benefits):   score += 10
+            if kw in title:           score += 100   # تطابق كامل في العنوان
+            if all(w in title for w in words): score += 50   # كل الكلمات في العنوان
+            if kw in text:            score += 30    # تطابق كامل في النص
+            if kw in topics:          score += 20    # في الموضوعات
+            if kw in narrator:        score += 15    # في الراوي
+            if kw in vocabulary:      score += 10    # في المفردات
+            if kw in benefits:        score += 10    # في الفوائد
+            # مكافأة على قِصَر النص (الحديث أكثر تركيزاً)
             score += max(0, 10 - len(text) // 100)
 
             scored.append((score, hadith))
 
         scored.sort(key=lambda x: x[0], reverse=True)
-        result = [h for _, h in scored[:limit]]
-        cache_set(cache_key, result)
-        return result
+        return [h for _, h in scored[:limit]]
 
     def get_related(self, hadith_id: int, limit: int = 3) -> List[Dict[str, Any]]:
         """يستخدم الروابط الحقيقية من JSON أولاً، ثم يعود للخوارزمية"""
@@ -498,20 +401,6 @@ class UserDataManager:
         return self.data_dir / f"user_{user_id}.json"
 
     def _load(self, user_id: int) -> Dict[str, Any]:
-        # ── محاولة التحميل من Supabase أولاً ──
-        if _supabase_client:
-            try:
-                res = _supabase_client.table("bot_users").select("data").eq("user_id", user_id).maybe_single().execute()
-                if res.data:
-                    data = res.data.get("data", {})
-                    for key, default in _USER_DEFAULTS.items():
-                        if key not in data:
-                            data[key] = default
-                    return data
-            except Exception as exc:
-                logger.warning(f"Supabase load failed for {user_id}, falling back to file: {exc}")
-
-        # ── احتياطي: ملف محلي ──
         path = self._get_path(user_id)
         if not path.exists():
             return dict(_USER_DEFAULTS)
@@ -527,24 +416,6 @@ class UserDataManager:
             return dict(_USER_DEFAULTS)
 
     def _save(self, user_id: int, data: Dict[str, Any]) -> bool:
-        # ── حفظ في Supabase (الأساسي) ──
-        if _supabase_client:
-            try:
-                _supabase_client.table("bot_users").upsert(
-                    {"user_id": user_id, "data": data},
-                    on_conflict="user_id"
-                ).execute()
-                # حفظ محلي احتياطي أيضاً
-                try:
-                    with open(self._get_path(user_id), "w", encoding="utf-8") as f:
-                        json.dump(data, f, ensure_ascii=False, indent=2)
-                except Exception:
-                    pass
-                return True
-            except Exception as exc:
-                logger.warning(f"Supabase save failed for {user_id}, falling back to file: {exc}")
-
-        # ── احتياطي: ملف محلي فقط ──
         try:
             with open(self._get_path(user_id), "w", encoding="utf-8") as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
@@ -718,24 +589,6 @@ class UserDataManager:
 
     def get_all_users(self) -> List[Tuple[int, Dict[str, Any]]]:
         """إرجاع كل المستخدمين مع بياناتهم الكاملة"""
-        # ── من Supabase ──
-        if _supabase_client:
-            try:
-                res = _supabase_client.table("bot_users").select("user_id, data").execute()
-                if res.data:
-                    users = []
-                    for row in res.data:
-                        uid  = row["user_id"]
-                        data = row.get("data", {})
-                        for key, default in _USER_DEFAULTS.items():
-                            if key not in data:
-                                data[key] = default
-                        users.append((uid, data))
-                    return users
-            except Exception as exc:
-                logger.warning(f"Supabase get_all_users failed, falling back: {exc}")
-
-        # ── احتياطي: ملفات محلية ──
         users = []
         for path in self.data_dir.glob("user_*.json"):
             try:
@@ -2601,7 +2454,6 @@ class BotHandlers:
             "🔍 `/admin_user [id]` — بيانات مستخدم\n"
             "📋 `/admin_export` — تصدير CSV\n\n"
             "🔧 `/admin_maintenance on/off` — وضع الصيانة\n"
-            "📦 `/admin_cache` — إحصائيات الكاش والأداء\n"
             "❓ `/admin_help` — هذه القائمة\n"
         )
         await update.message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
@@ -2811,28 +2663,6 @@ class BotHandlers:
 
 
     @admin_only
-    async def admin_cache_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-        """📦 /admin_cache — إحصائيات الكاش وإعادة ضبطه"""
-        global _hadith_cache, _cache_hits
-        action = context.args[0].lower() if context.args else ""
-        if action == "clear":
-            size = len(_hadith_cache)
-            _hadith_cache.clear()
-            _cache_hits = 0
-            await update.message.reply_text(f"✅ تم مسح الكاش ({size} عنصر).")
-            return
-        webhook_status = "نعم" if WEBHOOK_URL else "لا (Polling)"
-        await update.message.reply_text(
-            "📦 *إحصائيات الكاش والأداء*\n\n"
-            f"🗂️ عناصر الكاش: *{len(_hadith_cache)}*/500\n"
-            f"✅ Cache hits: *{_cache_hits}*\n"
-            f"🔗 Webhook: *{webhook_status}*\n"
-            f"🛡️ Rate limit: *{RATE_LIMIT_MAX} رسالة/{RATE_LIMIT_WINDOW}ث*\n\n"
-            "لمسح الكاش: `/admin_cache clear`",
-            parse_mode=ParseMode.MARKDOWN,
-        )
-
-    @admin_only
     async def admin_top_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """📈 /admin_top — أكثر 10 مستخدمين نشاطاً"""
         users = self.user_data.get_all_users()
@@ -3030,14 +2860,6 @@ class BotHandlers:
         try:
             msg     = update.message
             user_id = update.effective_user.id
-
-            # ── Rate Limiting ──
-            if not is_admin(user_id) and not check_rate_limit(user_id):
-                await msg.reply_text(
-                    "⏳ أرسلت رسائل كثيرة جداً!\n"
-                    f"يرجى الانتظار قليلاً ثم المحاولة مجدداً."
-                )
-                return
 
             # رد المشرف على مستخدم من feedback
             if is_admin(user_id) and context.user_data.get("reply_to_user"):
@@ -4112,7 +3934,6 @@ async def _run_bot() -> None:
         ("admin_inactive",   handlers.admin_inactive_command),
         ("admin_announce",   handlers.admin_announce_command),
         ("admin_maintenance",handlers.admin_maintenance_command),
-        ("admin_cache",      handlers.admin_cache_command),
     ]:
         app.add_handler(CommandHandler(cmd, fn))
 
@@ -4131,26 +3952,19 @@ async def _run_bot() -> None:
     logger.info(f"🚀 نبراس v3 يعمل | {len(hadith_db)} حديث")
 
     # ── تشغيل حلقة التذكير و البوت معاً ──
-    # Render Free يعمل مع Polling بشكل مستقر
-    # Webhook يحتاج إعداد SSL منفصل — يُفعَّل لاحقاً
-    use_webhook = False  # WEBHOOK_URL موجود للمستقبل فقط
-
     async with app:
         await app.start()
-
-        # ── Polling (مستقر على Render) ──
-        logger.info("📡 تشغيل Polling")
         await app.updater.start_polling(
             allowed_updates=Update.ALL_TYPES,
-            drop_pending_updates=True,
+            drop_pending_updates=True,  # ✅ تجاهل الرسائل المرسلة أثناء توقف البوت
         )
-        print("📡 Polling mode")
 
         # شغّل حلقة التذكير في الخلفية
         reminder_task = asyncio.create_task(
             reminder_loop(app.bot, user_data_mgr, hadith_db)
         )
         try:
+            # انتظر حتى يتوقف البوت (Ctrl+C)
             await asyncio.Event().wait()
         except (KeyboardInterrupt, asyncio.CancelledError):
             pass
@@ -4176,4 +3990,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-#king
