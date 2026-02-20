@@ -1,0 +1,411 @@
+{% extends "base.html" %}
+
+{% block title %}عن موقع نبراس - الأربعين النووية | {{ settings.app_name }}{% endblock %}
+
+{% block og_title %}عن موقع {{ settings.app_name }} - الأربعين النووية{% endblock %}
+{% block og_description %}تعرّف على موقع نبراس، المنصة المتخصصة في تقديم الأربعين النووية بطريقة عصرية تجمع بين الأصالة والابتكار.{% endblock %}
+{% block og_url %}{{ settings.site_url }}/about{% endblock %}
+{% block tw_title %}عن موقع {{ settings.app_name }}{% endblock %}
+{% block tw_description %}تعرّف على موقع نبراس، المنصة المتخصصة في تقديم الأربعين النووية بطريقة عصرية تجمع بين الأصالة والابتكار.{% endblock %}
+{% block canonical %}{{ settings.site_url }}/about{% endblock %}
+
+{% block meta %}
+{{ super() }}
+<meta name="description" content="تعرّف على موقع نبراس، المنصة المتخصصة في تقديم الأربعين النووية بطريقة عصرية تجمع بين الأصالة في المحتوى والابتكار في العرض.">
+<meta name="keywords" content="عن نبراس، موقع الأربعين النووية، الأحاديث النبوية، الإمام النووي، تعلم الأحاديث">
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .about-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 48px 24px;
+    }
+
+    .about-header {
+        margin-bottom: 48px;
+    }
+
+    .breadcrumb {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--color-text-secondary);
+        font-size: 14px;
+        margin-bottom: 24px;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+
+    .breadcrumb:hover {
+        color: var(--color-primary);
+    }
+
+    .page-title {
+        font-size: 40px;
+        font-weight: 700;
+        color: var(--color-text-primary);
+        margin-bottom: 8px;
+    }
+
+    .page-subtitle {
+        color: var(--color-text-secondary);
+        font-size: 14px;
+    }
+
+    .section {
+        background-color: var(--color-bg-card);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        padding: 32px;
+        margin-bottom: 24px;
+        animation: fadeIn 0.6s ease-out forwards;
+        opacity: 0;
+    }
+
+    .section:nth-child(1) { animation-delay: 0.1s; }
+    .section:nth-child(2) { animation-delay: 0.2s; }
+    .section:nth-child(3) { animation-delay: 0.3s; }
+    .section:nth-child(4) { animation-delay: 0.4s; }
+    .section:nth-child(5) { animation-delay: 0.5s; }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--color-primary);
+        margin-bottom: 24px;
+    }
+
+    .section-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 48px;
+        height: 48px;
+        background-color: var(--color-primary-soft);
+        border-radius: var(--radius-md);
+        color: var(--color-primary);
+    }
+
+    .section-text {
+        color: var(--color-text-secondary);
+        line-height: 1.8;
+        margin-bottom: 16px;
+    }
+
+    .section-text:last-child {
+        margin-bottom: 0;
+    }
+
+    .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 16px;
+    }
+
+    .feature-card {
+        background-color: var(--color-bg-hover);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        padding: 20px;
+        transition: all 0.3s ease;
+    }
+
+    .feature-card:hover {
+        border-color: var(--color-primary);
+        background-color: var(--color-primary-soft);
+    }
+
+    .feature-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+        color: var(--color-primary);
+        margin-bottom: 8px;
+    }
+
+    .feature-description {
+        font-size: 14px;
+        color: var(--color-text-secondary);
+        line-height: 1.6;
+    }
+
+    .tech-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 16px;
+    }
+
+    .tech-card {
+        text-align: center;
+        padding: 16px;
+        background-color: var(--color-bg-hover);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        transition: all 0.3s ease;
+    }
+
+    .tech-card:hover {
+        border-color: var(--color-primary);
+        background-color: var(--color-primary-soft);
+    }
+
+    .tech-name {
+        font-weight: 600;
+        color: var(--color-primary);
+        margin-bottom: 4px;
+    }
+
+    .tech-type {
+        font-size: 12px;
+        color: var(--color-text-secondary);
+    }
+
+    .highlight-section {
+        background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+        color: white;
+        border: none;
+    }
+
+    .highlight-section .section-text {
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .list-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .list-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .list-icon {
+        color: var(--color-primary);
+        flex-shrink: 0;
+        margin-top: 2px;
+    }
+
+    .list-content {
+        flex: 1;
+    }
+
+    .list-title {
+        font-weight: 600;
+        color: var(--color-text-primary);
+        margin-bottom: 4px;
+    }
+
+    .list-description {
+        font-size: 14px;
+        color: var(--color-text-secondary);
+        line-height: 1.6;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 768px) {
+        .about-container {
+            padding: 24px 16px;
+        }
+
+        .page-title {
+            font-size: 28px;
+        }
+
+        .section {
+            padding: 20px;
+        }
+
+        .feature-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .tech-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="about-container">
+    <!-- Header -->
+    <div class="about-header">
+        <a href="/" class="breadcrumb">
+            <span class="material-icons-outlined">arrow_forward</span>
+            العودة للرئيسية
+        </a>
+        <h1 class="page-title">عن الموقع</h1>
+        <p class="page-subtitle">نسخة {{ settings.app_version }}</p>
+    </div>
+
+    <!-- About Project -->
+    <section class="section">
+        <div class="section-header">
+            <span class="material-icons-outlined section-icon">auto_stories</span>
+            نبراس - الأربعون النووية
+        </div>
+        <p class="section-text">
+            نبراس هو موقع تعليمي تفاعلي متخصص في الأحاديث النبوية الشريفة من كتاب "الأربعون النووية" للإمام النووي رحمه الله. نسعى إلى أن نكون منارة (نبراساً) تضيء الطريق للباحثين عن العلم الشرعي الصحيح.
+        </p>
+        <p class="section-text">
+            نوفر من خلال المنصة واجهة عصرية وسهلة الاستخدام لحفظ ودراسة هذه الأحاديث الجوامع، مع إمكانية حفظ التقدم الشخصي، واختبارات تفاعلية للمراجعة، ومشاركة الفوائد مع المجتمع.
+        </p>
+    </section>
+
+    <!-- Goals -->
+    <section class="section">
+        <div class="section-header">
+            <span class="material-icons-outlined section-icon">flag</span>
+            أهدافنا
+        </div>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div class="feature-title">
+                    <span class="material-icons-outlined">school</span>
+                    التعليم
+                </div>
+                <p class="feature-description">تسهيل تعلم وحفظ الأحاديث النبوية الشريفة بطريقة تفاعلية وممتعة</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-title">
+                    <span class="material-icons-outlined">share</span>
+                    النشر
+                </div>
+                <p class="feature-description">إتاحة الأحاديث الشريفة للجميع بشكل سهل وميسر عبر الإنترنت</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-title">
+                    <span class="material-icons-outlined">quiz</span>
+                    الاختبار
+                </div>
+                <p class="feature-description">توفير اختبارات تفاعلية لتعزيز الحفظ والفهم</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-title">
+                    <span class="material-icons-outlined">volunteer_activism</span>
+                    الأجر
+                </div>
+                <p class="feature-description">المساهمة في نشر العلم الشرعي والسنة النبوية</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="section">
+        <div class="section-header">
+            <span class="material-icons-outlined section-icon">star</span>
+            الميزات
+        </div>
+        <div class="list-item">
+            <span class="material-icons-outlined list-icon">check_circle</span>
+            <div class="list-content">
+                <div class="list-title">عرض شامل للأحاديث</div>
+                <p class="list-description">نص الحديث، الراوي، المصدر، شرح الكلمات، والفوائد المستنبطة</p>
+            </div>
+        </div>
+
+        <div class="list-item">
+            <span class="material-icons-outlined list-icon">check_circle</span>
+            <div class="list-content">
+                <div class="list-title">اختبارات تفاعلية</div>
+                <p class="list-description">6 أنواع اختبارات متنوعة مع مؤقت زمني ونتائج فورية</p>
+            </div>
+        </div>
+
+        <div class="list-item">
+            <span class="material-icons-outlined list-icon">check_circle</span>
+            <div class="list-content">
+                <div class="list-title">بحث متقدم</div>
+                <p class="list-description">إمكانية البحث في الأحاديث بسهولة</p>
+            </div>
+        </div>
+
+        <div class="list-item">
+            <span class="material-icons-outlined list-icon">check_circle</span>
+            <div class="list-content">
+                <div class="list-title">مشاركة سهلة</div>
+                <p class="list-description">إمكانية مشاركة الأحاديث عبر وسائل التواصل</p>
+            </div>
+        </div>
+
+        <div class="list-item">
+            <span class="material-icons-outlined list-icon">check_circle</span>
+            <div class="list-content">
+                <div class="list-title">تصميم عصري</div>
+                <p class="list-description">واجهة متجاوبة مع وضع داكن مريح للعين</p>
+            </div>
+        </div>
+
+        <div class="list-item">
+            <span class="material-icons-outlined list-icon">check_circle</span>
+            <div class="list-content">
+                <div class="list-title">مجاني بالكامل</div>
+                <p class="list-description">جميع الميزات متاحة مجاناً للجميع</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Al-Nawawi -->
+    <section class="section highlight-section">
+        <div class="section-header" style="color: white;">
+            <span class="material-icons-outlined section-icon" style="background-color: rgba(255, 255, 255, 0.2); color: white;">person</span>
+            عن الإمام النووي
+        </div>
+        <p class="section-text">
+            هو الإمام أبو زكريا محيي الدين يحيى بن شرف النووي (631-676 هـ)، أحد أبرز علماء الحديث والفقه في التاريخ الإسلامي.
+        </p>
+        <p class="section-text">
+            كتاب الأربعين النووية من أشهر مؤلفاته، وهو مجموعة من 42 حديثاً نبوياً شريفاً تغطي أصول الدين والأحكام والآداب.
+        </p>
+    </section>
+
+    <!-- Technologies -->
+    <section class="section">
+        <div class="section-header">
+            <span class="material-icons-outlined section-icon">code</span>
+            التقنيات المستخدمة
+        </div>
+        <div class="tech-grid">
+            <div class="tech-card">
+                <div class="tech-name">Python</div>
+                <div class="tech-type">Backend</div>
+            </div>
+            <div class="tech-card">
+                <div class="tech-name">FastAPI</div>
+                <div class="tech-type">Framework</div>
+            </div>
+            <div class="tech-card">
+                <div class="tech-name">Tailwind CSS</div>
+                <div class="tech-type">Styling</div>
+            </div>
+            <div class="tech-card">
+                <div class="tech-name">JavaScript</div>
+                <div class="tech-type">Interactivity</div>
+            </div>
+            <div class="tech-card">
+                <div class="tech-name">Material Icons</div>
+                <div class="tech-type">Icons</div>
+            </div>
+            <div class="tech-card">
+                <div class="tech-name">Docker</div>
+                <div class="tech-type">Deployment</div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

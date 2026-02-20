@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>اختبار التبويبات</title>
+    <style>
+        .tab-panel { display: none; padding: 20px; border: 1px solid #ccc; margin: 10px; }
+        .tab-panel.active { display: block; background: #e0ffe0; }
+        .tab-btn { margin: 5px; padding: 10px 20px; cursor: pointer; }
+        .tab-btn.active { background: #4CAF50; color: white; }
+    </style>
+</head>
+<body>
+    <h1>اختبار التبويبات</h1>
+    
+    <div>
+        <button class="tab-btn active" onclick="switchTab('saved', this)">المحفوظات</button>
+        <button class="tab-btn" onclick="switchTab('progress', this)">التقدم</button>
+        <button class="tab-btn" onclick="switchTab('achievements', this)">الإنجازات</button>
+        <button class="tab-btn" onclick="switchTab('settings', this)">الإعدادات</button>
+    </div>
+    
+    <div class="tab-panel active" id="panel-saved">محتوى المحفوظات</div>
+    <div class="tab-panel" id="panel-progress">محتوى التقدم</div>
+    <div class="tab-panel" id="panel-achievements">محتوى الإنجازات</div>
+    <div class="tab-panel" id="panel-settings">محتوى الإعدادات</div>
+    
+    <script>
+    function switchTab(name, btn) {
+        console.log('switchTab called:', name);
+        
+        const tabs = document.querySelectorAll('.tab-btn');
+        const panels = document.querySelectorAll('.tab-panel');
+        const targetPanel = document.getElementById('panel-' + name);
+        
+        if (!targetPanel) {
+            console.error('Panel not found: panel-' + name);
+            return;
+        }
+        
+        tabs.forEach(b => b.classList.remove('active'));
+        panels.forEach(p => p.classList.remove('active'));
+        
+        btn.classList.add('active');
+        targetPanel.classList.add('active');
+        
+        console.log('Tab switched successfully to:', name);
+    }
+    </script>
+</body>
+</html>

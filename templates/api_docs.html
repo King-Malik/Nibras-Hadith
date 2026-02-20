@@ -1,0 +1,487 @@
+{% extends "base.html" %}
+
+{% block title %}توثيق API الأحاديث النبوية | {{ settings.app_name }}{% endblock %}
+
+{% block og_title %}API الأحاديث النبوية - {{ settings.app_name }}{% endblock %}
+{% block og_description %}وثّق لـ REST API مجاني للأربعين النووية. احصل على بيانات الأحاديث النبوية الشريفة بصيغة JSON لمشاريعك ومواقعك.{% endblock %}
+{% block og_url %}{{ settings.site_url }}/api-docs{% endblock %}
+{% block tw_title %}API الأحاديث النبوية - {{ settings.app_name }}{% endblock %}
+{% block tw_description %}REST API مجاني للأربعين النووية بصيغة JSON.{% endblock %}
+{% block canonical %}{{ settings.site_url }}/api-docs{% endblock %}
+
+{% block meta %}
+{{ super() }}
+<meta name="description" content="توثيق REST API مجاني للأربعين النووية. احصل على بيانات الأحاديث النبوية الشريفة بصيغة JSON لتطبيقاتك ومواقعك.">
+<meta name="keywords" content="API الأحاديث، REST API، الأربعين النووية، JSON، بيانات الأحاديث، واجهة برمجية">
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    code, pre {
+        font-family: "Fira Code", monospace;
+        direction: ltr;
+        text-align: left;
+    }
+
+    .api-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 48px 24px;
+    }
+
+    .api-header {
+        margin-bottom: 48px;
+    }
+
+    .api-title {
+        font-size: 40px;
+        font-weight: 700;
+        color: var(--color-text-primary);
+        margin-bottom: 8px;
+    }
+
+    .api-subtitle {
+        color: var(--color-text-secondary);
+        font-size: 16px;
+    }
+
+    .section-card {
+        background-color: var(--color-bg-card);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        padding: 32px;
+        margin-bottom: 24px;
+        animation: fadeIn 0.6s ease-out forwards;
+        opacity: 0;
+    }
+
+    .section-card:nth-child(1) { animation-delay: 0.1s; }
+    .section-card:nth-child(2) { animation-delay: 0.2s; }
+    .section-card:nth-child(3) { animation-delay: 0.3s; }
+    .section-card:nth-child(4) { animation-delay: 0.4s; }
+    .section-card:nth-child(5) { animation-delay: 0.5s; }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--color-primary);
+        margin-bottom: 24px;
+    }
+
+    .section-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 48px;
+        height: 48px;
+        background-color: var(--color-primary-soft);
+        border-radius: var(--radius-md);
+        color: var(--color-primary);
+    }
+
+    .code-block-wrapper {
+        position: relative;
+        margin-top: 16px;
+        margin-bottom: 16px;
+    }
+
+    .copy-btn {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        padding: 6px 12px;
+        background-color: var(--color-primary);
+        color: white;
+        border-radius: var(--radius-md);
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        opacity: 0.8;
+    }
+
+    .copy-btn:hover {
+        background-color: var(--color-primary-dark);
+        opacity: 1;
+    }
+
+    pre {
+        background-color: #1e293b; /* slate-800 */
+        color: #e2e8f0; /* slate-200 */
+        padding: 16px;
+        border-radius: var(--radius-md);
+        overflow-x: auto;
+        font-size: 14px;
+        line-height: 1.5;
+    }
+
+    .http-method {
+        padding: 4px 10px;
+        border-radius: var(--radius-md);
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .method-get {
+        background-color: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+
+    .method-post {
+        background-color: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
+    }
+
+    .param-list {
+        background-color: var(--color-bg-hover);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        padding: 16px;
+        margin-top: 16px;
+        margin-bottom: 16px;
+    }
+
+    .param-item {
+        font-size: 14px;
+        color: var(--color-text-primary);
+        margin-bottom: 8px;
+    }
+
+    .param-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .param-name {
+        font-weight: 600;
+        color: var(--color-primary);
+    }
+
+    .breadcrumb {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--color-text-secondary);
+        font-size: 14px;
+        margin-bottom: 24px;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+
+    .breadcrumb:hover {
+        color: var(--color-primary);
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 768px) {
+        .api-container {
+            padding: 24px 16px;
+        }
+
+        .api-title {
+            font-size: 28px;
+        }
+
+        .section-card {
+            padding: 20px;
+        }
+
+        .section-header {
+            font-size: 20px;
+        }
+
+        .section-icon {
+            width: 40px;
+            height: 40px;
+            font-size: 24px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="api-container">
+    <a href="/" class="breadcrumb">
+        <span class="material-icons-outlined">arrow_forward</span>
+        العودة للرئيسية
+    </a>
+
+    <div class="api-header">
+        <h1 class="api-title">توثيق API</h1>
+        <p class="api-subtitle">للمطورين الراغبين في استخدام بيانات المشروع</p>
+    </div>
+
+    <!-- Overview -->
+    <section class="section-card">
+        <div class="section-header">
+            <span class="material-icons-outlined section-icon">info</span>
+            نظرة عامة
+        </div>
+        <p class="text-color-text-secondary leading-relaxed mb-4">
+            يوفر هذا API إمكانية الوصول إلى بيانات الأحاديث النبوية الشريفة والتعليقات. جميع الطلبات تستخدم JSON.
+        </p>
+        <div class="grid md:grid-cols-2 gap-4">
+            <div class="bg-color-bg-hover border border-color-border p-4 rounded-md">
+                <p class="text-xs text-color-text-secondary mb-1">Base URL</p>
+                <code class="text-sm text-color-primary break-all">{{ base_url }}</code>
+            </div>
+            <div class="bg-color-bg-hover border border-color-border p-4 rounded-md">
+                <p class="text-xs text-color-text-secondary mb-1">نوع المحتوى</p>
+                <code class="text-sm">application/json</code>
+            </div>
+        </div>
+    </section>
+
+    <!-- Endpoints -->
+    <div class="space-y-8">
+        
+        <!-- GET /api/hadiths -->
+        <section class="section-card">
+            <div class="flex items-center gap-3 mb-4">
+                <span class="http-method method-get">GET</span>
+                <code class="text-lg font-bold text-color-text-primary">/api/hadiths</code>
+            </div>
+            
+            <p class="text-color-text-secondary mb-4">جلب جميع الأحاديث مع pagination</p>
+            
+            <h4 class="font-bold mb-2 text-color-text-primary">المعاملات (Parameters):</h4>
+            <div class="param-list">
+                <p class="param-item"><span class="param-name">skip</span> (اختياري) - عدد الأحاديث لتخطيها (افتراضي: 0)</p>
+                <p class="param-item"><span class="param-name">limit</span> (اختياري) - الحد الأقصى لعدد الأحاديث المراد جلبها (افتراضي: 20)</p>
+                <p class="param-item"><span class="param-name">q</span> (اختياري) - نص البحث</p>
+            </div>
+            
+            <h4 class="font-bold mb-2 text-color-text-primary">مثال على الطلب:</h4>
+            <div class="code-block-wrapper">
+                <button class="copy-btn" onclick="copyCode(this, 'code1')">نسخ</button>
+                <pre id="code1"><code>GET {{ base_url }}/api/hadiths
+GET {{ base_url }}/api/hadiths?q=الإيمان&skip=10&limit=5</code></pre>
+            </div>
+            
+            <h4 class="font-bold mb-2 text-color-text-primary">الاستجابة:</h4>
+            <div class="code-block-wrapper">
+                <button class="copy-btn" onclick="copyCode(this, 'code2')">نسخ</button>
+                <pre id="code2"><code>[
+  {
+    "id": 1,
+    "title": "بني الإسلام على خمس",
+    "text": "بني الإسلام على خمس...",
+    "narrator": "عبد الله بن عمر",
+    "source": "صحيح البخاري",
+    "vocabulary": [...],
+    "benefits": [...]
+  }
+]</code></pre>
+            </div>
+        </section>
+        
+        <!-- GET /api/hadiths/{hadith_id} -->
+        <section class="section-card">
+            <div class="flex items-center gap-3 mb-4">
+                <span class="http-method method-get">GET</span>
+                <code class="text-lg font-bold text-color-text-primary">/api/hadiths/{hadith_id}</code>
+            </div>
+            
+            <p class="text-color-text-secondary mb-4">جلب حديث معين</p>
+            
+            <h4 class="font-bold mb-2 text-color-text-primary">مثال على الطلب:</h4>
+            <div class="code-block-wrapper">
+                <button class="copy-btn" onclick="copyCode(this, 'code3')">نسخ</button>
+                <pre id="code3"><code>GET {{ base_url }}/api/hadiths/1</code></pre>
+            </div>
+            
+            <h4 class="font-bold mb-2 text-color-text-primary">الاستجابة:</h4>
+            <div class="code-block-wrapper">
+                <button class="copy-btn" onclick="copyCode(this, 'code4')">نسخ</button>
+                <pre id="code4"><code>{
+  "id": 1,
+  "title": "بني الإسلام على خمس",
+  "text": "...",
+  "narrator": "عبد الله بن عمر",
+  "source": "صحيح البخاري",
+  "vocabulary": [...],
+  "benefits": [...]
+}</code></pre>
+            </div>
+        </section>
+
+        <!-- GET /api/hadiths/random -->
+        <section class="section-card">
+            <div class="flex items-center gap-3 mb-4">
+                <span class="http-method method-get">GET</span>
+                <code class="text-lg font-bold text-color-text-primary">/api/hadiths/random</code>
+            </div>
+            
+            <p class="text-color-text-secondary mb-4">جلب حديث عشوائي</p>
+            
+            <h4 class="font-bold mb-2 text-color-text-primary">مثال على الطلب:</h4>
+            <div class="code-block-wrapper">
+                <button class="copy-btn" onclick="copyCode(this, 'code_random_req')">نسخ</button>
+                <pre id="code_random_req"><code>GET {{ base_url }}/api/hadiths/random</code></pre>
+            </div>
+            
+            <h4 class="font-bold mb-2 text-color-text-primary">الاستجابة:</h4>
+            <div class="code-block-wrapper">
+                <button class="copy-btn" onclick="copyCode(this, 'code_random_res')">نسخ</button>
+                <pre id="code_random_res"><code>{
+  "id": 25,
+  "title": "كل سلامى من الناس عليه صدقة",
+  "text": "...",
+  "narrator": "أبو هريرة",
+  "source": "صحيح مسلم",
+  "vocabulary": [...],
+  "benefits": [...]
+}</code></pre>
+            </div>
+        </section>
+        
+        <!-- GET /api/search -->
+        <section class="section-card">
+            <div class="flex items-center gap-3 mb-4">
+                <span class="http-method method-get">GET</span>
+                <code class="text-lg font-bold text-color-text-primary">/api/search</code>
+            </div>
+            
+            <p class="text-color-text-secondary mb-4">البحث في الأحاديث عبر API</p>
+            
+            <h4 class="font-bold mb-2 text-color-text-primary">المعاملات (Parameters):</h4>
+            <div class="param-list">
+                <p class="param-item"><span class="param-name">q</span> (مطلوب) - نص البحث</p>
+                <p class="param-item"><span class="param-name">limit</span> (اختياري) - الحد الأقصى لعدد النتائج (افتراضي: 10)</p>
+            </div>
+            
+            <h4 class="font-bold mb-2 text-color-text-primary">مثال على الطلب:</h4>
+            <div class="code-block-wrapper">
+                <button class="copy-btn" onclick="copyCode(this, 'code_search_req')">نسخ</button>
+                <pre id="code_search_req"><code>GET {{ base_url }}/api/search?q=النية&limit=5</code></pre>
+            </div>
+            
+            <h4 class="font-bold mb-2 text-color-text-primary">الاستجابة:</h4>
+            <div class="code-block-wrapper">
+                <button class="copy-btn" onclick="copyCode(this, 'code_search_res')">نسخ</button>
+                <pre id="code_search_res"><code>[
+  {
+    "id": 1,
+    "title": "إنما الأعمال بالنيات",
+    "text": "...",
+    "narrator": "عمر بن الخطاب",
+    "source": "صحيح البخاري",
+    "vocabulary": [...],
+    "benefits": [...]
+  }
+]</code></pre>
+            </div>
+        </section>
+
+        <!-- POST /api/comments -->
+        <section class="section-card">
+            <div class="flex items-center gap-3 mb-4">
+                <span class="http-method method-post">POST</span>
+                <code class="text-lg font-bold text-color-text-primary">/api/comments</code>
+            </div>
+            
+            <p class="text-color-text-secondary mb-4">إضافة تعليق جديد</p>
+            
+            <h4 class="font-bold mb-2 text-color-text-primary">البيانات المطلوبة (JSON Body):</h4>
+            <div class="code-block-wrapper">
+                <button class="copy-btn" onclick="copyCode(this, 'code5')">نسخ</button>
+                <pre id="code5"><code>{
+  "hadith_id": 1,  // رقم الحديث، أو 0 للتعليقات العامة
+  "name": "اسم المعلق",
+  "email": "بريد_إلكتروني@example.com",
+  "comment": "نص التعليق"
+}</code></pre>
+            </div>
+            
+            <h4 class="font-bold mb-2 text-color-text-primary">مثال بالـ cURL:</h4>
+            <div class="code-block-wrapper">
+                <button class="copy-btn" onclick="copyCode(this, 'code6')">نسخ</button>
+                <pre id="code6"><code>curl -X POST {{ base_url }}/api/comments \
+  -H "Content-Type: application/json" \
+  -d '{
+    "hadith_id": 1,
+    "name": "أحمد",
+    "email": "ahmad@example.com",
+    "comment": "جزاكم الله خيراً"
+  }'</code></pre>
+            </div>
+            
+            <h4 class="font-bold mb-2 text-color-text-primary">الاستجابة:</h4>
+            <div class="code-block-wrapper">
+                <button class="copy-btn" onclick="copyCode(this, 'code7')">نسخ</button>
+                <pre id="code7"><code>{
+  "success": true,
+  "message": "تم إضافة تعليقك بنجاح!",
+  "data": {
+    "id": "uuid-here",
+    "name": "أحمد",
+    "comment": "جزاكم الله خيراً",
+    "created_at": "2024-02-07T12:00:00Z"
+  }
+}</code></pre>
+            </div>
+        </section>
+        
+        <!-- GET /api/comments/{hadith_id} -->
+        <section class="section-card">
+            <div class="flex items-center gap-3 mb-4">
+                <span class="http-method method-get">GET</span>
+                <code class="text-lg font-bold text-color-text-primary">/api/comments/{hadith_id}</code>
+            </div>
+            
+            <p class="text-color-text-secondary mb-4">جلب التعليقات لحديث معين (أو 0 للتعليقات العامة)</p>
+            
+            <h4 class="font-bold mb-2 text-color-text-primary">المعاملات (Parameters):</h4>
+            <div class="param-list">
+                <p class="param-item"><span class="param-name">hadith_id</span> (مطلوب) - رقم الحديث. استخدم 0 لجلب التعليقات العامة.</p>
+                <p class="param-item"><span class="param-name">limit</span> (اختياري) - الحد الأقصى لعدد التعليقات (افتراضي: 10)</p>
+            </div>
+            
+            <h4 class="font-bold mb-2 text-color-text-primary">مثال على الطلب:</h4>
+            <div class="code-block-wrapper">
+                <button class="copy-btn" onclick="copyCode(this, 'code8')">نسخ</button>
+                <pre id="code8"><code>GET {{ base_url }}/api/comments/1    // تعليقات الحديث الأول
+GET {{ base_url }}/api/comments/0    // التعليقات العامة
+GET {{ base_url }}/api/comments/5?limit=10  // أول 10 تعليقات للحديث الخامس</code></pre>
+            </div>
+            
+            <h4 class="font-bold mb-2 text-color-text-primary">الاستجابة:</h4>
+            <div class="code-block-wrapper">
+                <button class="copy-btn" onclick="copyCode(this, 'code9')">نسخ</button>
+                <pre id="code9"><code>[
+  {
+    "id": "uuid-here",
+    "hadith_id": 1,
+    "name": "أحمد",
+    "comment": "جزاكم الله خيراً",
+    "created_at": "2024-02-07T12:00:00Z",
+    "time_ago": "منذ ساعة"
+  }
+]</code></pre>
+            </div>
+        </section>
+    </div>
+</div>
+
+<script>
+    function copyCode(button, codeId) {
+        const codeBlock = document.getElementById(codeId);
+        const textToCopy = codeBlock.textContent;
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            const originalText = button.textContent;
+            button.textContent = 'تم النسخ!';
+            setTimeout(() => {
+                button.textContent = originalText;
+            }, 2000);
+        }).catch(err => {
+            console.error('Failed to copy text: ', err);
+        });
+    }
+</script>
+{% endblock %}

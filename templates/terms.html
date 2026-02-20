@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+
+{% block title %}شروط الاستخدام | {{ settings.app_name }}{% endblock %}
+
+{% block og_title %}شروط الاستخدام - {{ settings.app_name }}{% endblock %}
+{% block og_description %}اطّلع على شروط وأحكام استخدام موقع نبراس للأربعين النووية.{% endblock %}
+{% block og_url %}{{ settings.site_url }}/terms{% endblock %}
+{% block tw_title %}شروط الاستخدام - {{ settings.app_name }}{% endblock %}
+{% block tw_description %}اطّلع على شروط وأحكام استخدام موقع نبراس.{% endblock %}
+{% block canonical %}{{ settings.site_url }}/terms{% endblock %}
+
+{% block meta %}
+{{ super() }}
+<meta name="description" content="شروط وأحكام استخدام موقع نبراس للأربعين النووية - اقرأ الشروط قبل استخدام الموقع.">
+<meta name="keywords" content="شروط الاستخدام، نبراس، أحكام الموقع">
+<meta name="robots" content="noindex, follow">
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .terms-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 48px 24px;
+    }
+
+    .terms-header {
+        margin-bottom: 48px;
+    }
+
+    .breadcrumb {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--color-text-secondary);
+        font-size: 14px;
+        margin-bottom: 24px;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+
+    .breadcrumb:hover {
+        color: var(--color-primary);
+    }
+
+    .page-title {
+        font-size: 40px;
+        font-weight: 700;
+        color: var(--color-text-primary);
+        margin-bottom: 8px;
+    }
+
+    .page-subtitle {
+        color: var(--color-text-secondary);
+        font-size: 14px;
+    }
+
+    .section {
+        background-color: var(--color-bg-card);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        padding: 32px;
+        margin-bottom: 24px;
+        animation: fadeIn 0.6s ease-out forwards;
+        opacity: 0;
+    }
+
+    /* تأثير الظهور المتتابع للأقسام */
+    .section:nth-child(1) { animation-delay: 0.1s; }
+    .section:nth-child(2) { animation-delay: 0.2s; }
+    .section:nth-child(3) { animation-delay: 0.3s; }
+    .section:nth-child(4) { animation-delay: 0.4s; }
+    .section:nth-child(5) { animation-delay: 0.5s; }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--color-primary);
+        margin-bottom: 24px;
+    }
+
+    .section-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 48px;
+        height: 48px;
+        background-color: var(--color-primary-soft);
+        border-radius: var(--radius-md);
+        color: var(--color-primary);
+    }
+
+    .section-text {
+        color: var(--color-text-secondary);
+        line-height: 1.8;
+        margin-bottom: 16px;
+    }
+
+    .usage-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 16px;
+        margin-top: 16px;
+    }
+
+    .usage-card {
+        background-color: var(--color-bg-hover);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        padding: 20px;
+    }
+
+    .usage-card-title {
+        font-weight: 700;
+        color: var(--color-primary);
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .prohibited-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 12px;
+        padding: 12px;
+        background-color: rgba(239, 68, 68, 0.05); /* Red tint for prohibited items */
+        border-radius: var(--radius-sm);
+    }
+
+    .prohibited-icon {
+        color: #ef4444;
+        flex-shrink: 0;
+    }
+
+    .warning-note {
+        background-color: #fffbeb; /* Yellow tint */
+        border: 1px solid #fde68a;
+        padding: 16px;
+        border-radius: var(--radius-md);
+        color: #92400e;
+        font-size: 14px;
+        margin-top: 16px;
+    }
+
+    .dark .warning-note {
+        background-color: rgba(251, 191, 36, 0.1);
+        border-color: rgba(251, 191, 36, 0.2);
+        color: #fbbf24;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 768px) {
+        .terms-container { padding: 24px 16px; }
+        .page-title { font-size: 28px; }
+        .section { padding: 20px; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="terms-container">
+    <div class="terms-header">
+        <a href="/" class="breadcrumb">
+            <span class="material-icons-outlined">arrow_forward</span>
+            العودة للرئيسية
+        </a>
+        <h1 class="page-title">شروط الاستخدام</h1>
+        <p class="page-subtitle">آخر تحديث: {{ now().strftime('%Y-%m-%d') }}</p>
+    </div>
+
+    <section class="section">
+        <div class="section-header">
+            <span class="material-icons-outlined section-icon">handshake</span>
+            اتفاقية الاستخدام
+        </div>
+        <p class="section-text">
+            مرحباً بك في موقع <strong>{{ settings.app_name }}</strong>. باستخدامك لهذا الموقع، فإنك توافق على الالتزام بهذه الشروط والأحكام. يرجى قراءتها بعناية قبل استخدام الموقع.
+        </p>
+    </section>
+
+    <section class="section">
+        <div class="section-header">
+            <span class="material-icons-outlined section-icon">description</span>
+            ضوابط الاستخدام
+        </div>
+        <div class="usage-grid">
+            <div class="usage-card">
+                <span class="usage-card-title">1. الغرض من الموقع</span>
+                <p class="section-text" style="font-size: 14px;">مخصص لنشر الأحاديث النبوية الشريفة وتوفير بيئة تعليمية تفاعلية للمستخدمين.</p>
+            </div>
+            <div class="usage-card">
+                <span class="usage-card-title">2. الاستخدام المقبول</span>
+                <p class="section-text" style="font-size: 14px;">يلتزم المستخدم باستخدام المنصة للأغراض التعليمية والدينية فقط وبشكل قانوني.</p>
+            </div>
+            <div class="usage-card">
+                <span class="usage-card-title">3. دقة المحتوى</span>
+                <p class="section-text" style="font-size: 14px;">نحرص على نقل الأحاديث من مصادر موثوقة، وننصح دوماً بمراجعة أمهات الكتب للتأصيل.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="section-header">
+            <span class="material-icons-outlined section-icon">gavel</span>
+            الملكية الفكرية
+        </div>
+        <p class="section-text">
+            جميع الحقوق محفوظة. التصميم، الهوية البصرية، والأكواد البرمجية للموقع محمية بموجب قوانين الملكية الفكرية.
+        </p>
+        <div class="warning-note">
+            <strong>توضيح شرعي:</strong> الأحاديث النبوية الشريفة هي تراث إسلامي متاح للجميع. حقوق الملكية الفكرية تنطبق على الجهد التقني والتصميمي للمنصة فقط.
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="section-header">
+            <span class="material-icons-outlined section-icon">block</span>
+            الاستخدامات المحظورة
+        </div>
+        <div class="prohibited-item">
+            <span class="material-icons-outlined prohibited-icon">cancel</span>
+            <p class="section-text" style="margin-bottom: 0;">محاولة اختراق الموقع أو التلاعب بالبيانات أو إلحاق الضرر بالخوادم.</p>
+        </div>
+        <div class="prohibited-item">
+            <span class="material-icons-outlined prohibited-icon">cancel</span>
+            <p class="section-text" style="margin-bottom: 0;">استغلال محتوى الموقع وتصاميمه تجارياً دون الحصول على إذن كتابي مسبق.</p>
+        </div>
+        <div class="prohibited-item">
+            <span class="material-icons-outlined prohibited-icon">cancel</span>
+            <p class="section-text" style="margin-bottom: 0;">استخدام أي أدوات آلية (Bots) لجمع البيانات من الموقع بشكل غير مصرح به.</p>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="section-header">
+            <span class="material-icons-outlined section-icon">verified_user</span>
+            إخلاء المسؤولية
+        </div>
+        <p class="section-text">
+            نقدم المحتوى "كما هو" دون ضمانات مطلقة. لا نتحمل مسؤولية أي أخطاء مطبعية نادرة أو توقف مؤقت للخدمة ناتج عن ظروف تقنية خارجة عن إرادتنا.
+        </p>
+        <p class="section-text" style="border-top: 1px solid var(--color-border); pt-4 mt-4;">
+            <span class="material-icons-outlined" style="vertical-align: middle; font-size: 18px;">edit</span>
+            نحتفظ بالحق في تعديل هذه الشروط في أي وقت لضمان أفضل تجربة للمستخدم.
+        </p>
+    </section>
+
+    <div style="text-align: center; margin-top: 12px; opacity: 0.8;">
+        <p class="section-text" style="color: var(--color-primary); font-weight: 700; text-decoration: underline;">
+            تخضع هذه الشروط للقوانين المعمول بها
+        </p>
+    </div>
+</div>
+{% endblock %}

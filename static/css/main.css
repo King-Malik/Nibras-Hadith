@@ -1,0 +1,669 @@
+/**
+ * ╔═══════════════════════════════════════════════════════════════╗
+ * ║         HADITH APP - SUPABASE STYLE DESIGN SYSTEM             ║
+ * ║         FULLY RESPONSIVE - Mobile First Approach              ║
+ * ╚═══════════════════════════════════════════════════════════════╝
+ */
+
+/* ============================================
+   🎨 CSS VARIABLES - Design Tokens
+   ============================================ */
+:root {
+    /* === Primary Colors (Supabase Emerald) === */
+    --color-primary: #10b981;
+    --color-primary-dark: #059669;
+    --color-primary-light: #34d399;
+    --color-primary-soft: rgba(16, 185, 129, 0.1);
+    
+    /* === Neutral Colors - Light Theme (Supabase Slate) === */
+    --color-bg-main: #f8fafc;
+    --color-bg-card: #ffffff;
+    --color-bg-hover: #f1f5f9;
+    --color-text-primary: #0f172a;
+    --color-text-secondary: #64748b;
+    --color-border: #e2e8f0;
+    --color-shadow: rgba(0, 0, 0, 0.05);
+    
+    /* === Typography === */
+    --font-family: 'Tajawal', sans-serif;
+    --line-height: 1.8;
+    
+    /* === Border Radius === */
+    --radius-md: 12px;
+    --radius-lg: 24px;
+    --radius-full: 9999px;
+    
+    /* === Transitions === */
+    --transition-base: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    /* === Responsive Font Sizes === */
+    --font-size-sm: clamp(12px, 2vw, 14px);
+    --font-size-base: clamp(14px, 2.5vw, 16px);
+    --font-size-lg: clamp(16px, 3vw, 18px);
+    --font-size-xl: clamp(18px, 4vw, 20px);
+    --font-size-2xl: clamp(20px, 5vw, 24px);
+    --font-size-3xl: clamp(24px, 6vw, 32px);
+    --font-size-4xl: clamp(28px, 8vw, 40px);
+}
+
+/* === Dark Theme Variables (Supabase Dark) === */
+.dark {
+    --color-bg-main: #0a0a0a;
+    --color-bg-card: #171717;
+    --color-bg-hover: #1f1f1f;
+    --color-text-primary: #ededed;
+    --color-text-secondary: #a1a1a1;
+    --color-border: #262626;
+    --color-shadow: rgba(0, 0, 0, 0.3);
+}
+
+/* ============================================
+   🔄 RESET & BASE STYLES
+   ============================================ */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    /* إزالة اللون الأزرق عند الضغط */
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+}
+
+html {
+    scroll-behavior: smooth;
+    font-size: 16px;
+}
+
+body {
+    font-family: var(--font-family);
+    line-height: var(--line-height);
+    color: var(--color-text-primary);
+    background-color: var(--color-bg-main);
+    transition: background-color var(--transition-base), color var(--transition-base);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* إزالة outline الأزرق من الأزرار والروابط */
+button,
+a,
+input,
+textarea,
+select {
+    outline: none;
+}
+
+button:focus-visible,
+a:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+/* ============================================
+   🎬 ANIMATIONS
+   ============================================ */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+    animation: fadeIn 0.6s ease-out forwards;
+}
+
+/* ============================================
+   🔘 BUTTONS & INTERACTIVES
+   ============================================ */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    text-decoration: none;
+    font-family: var(--font-family);
+    user-select: none;
+    font-size: var(--font-size-base);
+    min-height: 44px;
+    min-width: 44px;
+}
+
+.btn:active {
+    transform: scale(0.98);
+}
+
+.btn-primary {
+    background-color: var(--color-primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: var(--color-primary-dark);
+    transform: translateY(-1px);
+}
+
+.btn-outline {
+    background-color: transparent;
+    border-color: var(--color-border);
+    color: var(--color-text-primary);
+}
+
+.btn-outline:hover {
+    background-color: var(--color-bg-hover);
+    border-color: var(--color-text-secondary);
+}
+
+/* ============================================
+   📱 NAVIGATION BAR (Supabase Style)
+   ============================================ */
+.navbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background-color: rgba(var(--color-bg-main-rgb), 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--color-border);
+    height: auto;
+    min-height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    transition: all var(--transition-base);
+    flex-wrap: wrap;
+}
+
+.navbar-brand {
+    font-size: clamp(16px, 4vw, 20px);
+    font-weight: 700;
+    color: var(--color-primary);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.navbar-brand .material-icons-outlined {
+    font-size: clamp(20px, 5vw, 24px);
+}
+
+.navbar-nav {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    list-style: none;
+    margin-left: auto;
+    margin-right: 12px;
+}
+
+.navbar-nav a {
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+    font-size: clamp(12px, 2.5vw, 14px);
+    padding: 8px 12px;
+    border-radius: var(--radius-md);
+}
+
+.navbar-nav a:hover {
+    color: var(--color-primary);
+    background-color: var(--color-primary-soft);
+}
+
+/* ============================================
+   🃏 CARDS
+   ============================================ */
+.card {
+    background-color: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: clamp(16px, 4vw, 32px);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    border-color: var(--color-primary);
+    box-shadow: 0 10px 30px var(--color-shadow);
+}
+
+/* ============================================
+   🔔 TOASTS
+   ============================================ */
+.toast-container {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: calc(100% - 32px);
+}
+
+.toast {
+    background-color: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 12px 16px;
+    box-shadow: 0 4px 12px var(--color-shadow);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 250px;
+    max-width: 100%;
+    animation: slideIn 0.3s ease-out forwards;
+    font-size: var(--font-size-sm);
+}
+
+@keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+/* ============================================
+   📋 FORMS
+   ============================================ */
+.form-input,
+.form-textarea,
+.form-select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-bg-hover);
+    color: var(--color-text-primary);
+    font-family: var(--font-family);
+    font-size: var(--font-size-base);
+    transition: all 0.3s ease;
+    min-height: 44px;
+}
+
+.form-input:focus,
+.form-textarea:focus,
+.form-select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    background-color: var(--color-bg-card);
+    box-shadow: 0 0 0 3px var(--color-primary-soft);
+}
+
+.form-textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+/* ============================================
+   🎨 THEME TOGGLE
+   ============================================ */
+.theme-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-md);
+    background-color: var(--color-bg-hover);
+    border: 1px solid var(--color-border);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--color-text-primary);
+    min-width: 44px;
+    min-height: 44px;
+    flex-shrink: 0;
+}
+
+.theme-toggle:hover {
+    background-color: var(--color-primary-soft);
+    border-color: var(--color-primary);
+}
+
+.theme-toggle:active {
+    transform: scale(0.95);
+}
+
+.theme-toggle .material-icons-outlined {
+    font-size: clamp(18px, 4vw, 20px);
+}
+
+/* ============================================
+   📱 FOOTER
+   ============================================ */
+footer {
+    background-color: var(--color-bg-card);
+    border-top: 1px solid var(--color-border);
+    padding: clamp(20px, 4vw, 32px) clamp(16px, 4vw, 24px);
+    margin-top: 64px;
+    transition: all var(--transition-base);
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: clamp(16px, 4vw, 32px);
+}
+
+.footer-section h4 {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.footer-section p {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    line-height: 1.8;
+}
+
+.footer-section ul {
+    list-style: none;
+}
+
+.footer-section a {
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    font-size: var(--font-size-sm);
+    transition: color 0.3s ease;
+    display: block;
+    margin-bottom: 8px;
+    padding: 4px 0;
+}
+
+.footer-section a:hover {
+    color: var(--color-primary);
+}
+
+.footer-bottom {
+    border-top: 1px solid var(--color-border);
+    margin-top: 24px;
+    padding-top: 24px;
+    text-align: center;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+}
+
+/* ============================================
+   🔧 UTILITY CLASSES
+   ============================================ */
+.container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 clamp(16px, 4vw, 24px);
+}
+
+.flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.flex-between {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* ============================================
+   📱 RESPONSIVE - Mobile First (320px+)
+   ============================================ */
+
+/* Small Phones (320px - 374px) */
+@media (max-width: 374px) {
+    :root {
+        --font-size-4xl: clamp(24px, 7vw, 28px);
+    }
+
+    .navbar {
+        padding: 10px 12px;
+        min-height: 52px;
+    }
+
+    .navbar-nav {
+        gap: 8px;
+        margin-right: 8px;
+    }
+
+    .navbar-nav a {
+        padding: 6px 8px;
+        font-size: 11px;
+    }
+
+    .btn {
+        padding: 10px 16px;
+        font-size: var(--font-size-sm);
+    }
+
+    .card {
+        padding: 12px;
+    }
+
+    .toast {
+        min-width: auto;
+        width: calc(100vw - 32px);
+    }
+}
+
+/* Phones (375px - 599px) */
+@media (max-width: 599px) {
+    .navbar {
+        padding: 12px 14px;
+        min-height: 56px;
+    }
+
+    .navbar-brand {
+        font-size: 16px;
+    }
+
+    .navbar-brand .material-icons-outlined {
+        font-size: 20px;
+    }
+
+    .navbar-nav {
+        gap: 10px;
+        margin-right: 10px;
+    }
+
+    .navbar-nav a {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+
+    .footer-content {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .footer-section {
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--color-border);
+    }
+
+    .footer-section:last-child {
+        border-bottom: none;
+    }
+
+    .btn {
+        padding: 11px 20px;
+        font-size: var(--font-size-base);
+        width: 100%;
+    }
+
+    .card {
+        padding: 16px;
+    }
+
+    .toast {
+        min-width: auto;
+        width: calc(100vw - 32px);
+        max-width: 100%;
+    }
+}
+
+/* Tablets & Small Laptops (600px - 899px) */
+@media (min-width: 600px) and (max-width: 899px) {
+    .navbar {
+        padding: 14px 18px;
+        min-height: 60px;
+    }
+
+    .navbar-brand {
+        font-size: 18px;
+    }
+
+    .navbar-nav {
+        gap: 14px;
+        margin-right: 14px;
+    }
+
+    .navbar-nav a {
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+
+    .footer-content {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 24px;
+    }
+
+    .btn {
+        padding: 12px 24px;
+        font-size: var(--font-size-base);
+    }
+
+    .card {
+        padding: 20px;
+    }
+}
+
+/* Desktops (900px+) */
+@media (min-width: 900px) {
+    .navbar {
+        padding: 0 24px;
+        height: 64px;
+    }
+
+    .navbar-brand {
+        font-size: 20px;
+    }
+
+    .navbar-nav {
+        gap: 24px;
+        margin-right: 0;
+    }
+
+    .navbar-nav a {
+        padding: 8px 0;
+        font-size: 14px;
+    }
+
+    .footer-content {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 32px;
+    }
+
+    .btn {
+        padding: 12px 24px;
+        font-size: var(--font-size-base);
+        width: auto;
+    }
+
+    .card {
+        padding: 32px;
+    }
+
+    .toast {
+        min-width: 300px;
+    }
+}
+
+/* Large Desktops (1200px+) */
+@media (min-width: 1200px) {
+    :root {
+        --font-size-4xl: 40px;
+    }
+
+    .navbar {
+        padding: 0 32px;
+    }
+
+    .footer-content {
+        gap: 48px;
+    }
+}
+
+/* ============================================
+   🎯 SCROLLBAR STYLING
+   ============================================ */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--color-text-secondary);
+}
+
+/* ============================================
+   ⚡ PERFORMANCE OPTIMIZATIONS
+   ============================================ */
+* {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* تحسين الأداء للعناصر المتحركة */
+.fade-in,
+.btn,
+.card {
+    will-change: transform, opacity;
+}
+
+/* ============================================
+   ♿ ACCESSIBILITY
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* تحسين التباين للوضع الليلي */
+@media (prefers-color-scheme: dark) {
+    :root {
+        color-scheme: dark;
+    }
+}
+
+/* تحسين التباين للوضع النهاري */
+@media (prefers-color-scheme: light) {
+    :root {
+        color-scheme: light;
+    }
+}

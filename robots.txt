@@ -1,0 +1,24 @@
+User-agent: *
+Allow: /
+Allow: /hadith/
+Allow: /quiz
+Allow: /about
+Allow: /comments
+Allow: /api-docs
+Allow: /contact
+Allow: /privacy
+Allow: /terms
+
+# منع صفحات API الداخلية من الفهرسة
+Disallow: /api/
+Disallow: /debug/
+Disallow: /static/
+
+# منع صفحات المستخدم الخاصة
+Disallow: /profile
+
+# السيتماب
+Sitemap: https://nibras-nawawi.onrender.com/sitemap.xml
+
+# معدل الزحف
+Crawl-delay: 10

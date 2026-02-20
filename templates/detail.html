@@ -1,0 +1,792 @@
+{% extends "base.html" %}
+
+{% block title %}{{ hadith.title }} - شرح الحديث النبوي | {{ settings.app_name }}{% endblock %}
+
+{% block og_title %}{{ hadith.title }} - {{ settings.app_name }}{% endblock %}
+{% block og_description %}{{ hadith.text[:200] | replace('"', '') }}{% endblock %}
+{% block og_url %}{{ settings.site_url }}/hadith/{{ hadith.id }}{% endblock %}
+{% block tw_title %}{{ hadith.title }} - {{ settings.app_name }}{% endblock %}
+{% block tw_description %}{{ hadith.text[:200] | replace('"', '') }}{% endblock %}
+{% block canonical %}{{ settings.site_url }}/hadith/{{ hadith.id }}{% endblock %}
+
+{% block meta %}
+{{ super() }}
+<meta name="description" content="شرح حديث: {{ hadith.title }}. عن {{ hadith.narrator }}. {{ hadith.text[:140] | replace('"', '') }}">
+<meta name="keywords" content="{{ hadith.title }}، {{ hadith.narrator }}، الأربعين النووية، أحاديث نبوية، شرح الأحاديث، {{ settings.app_name }}">
+
+<!-- Schema.org Article markup للأحاديث -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "{{ hadith.title }}",
+  "description": "{{ hadith.text[:200] | replace('"', '') | replace("'", '') }}",
+  "author": {
+    "@type": "Organization",
+    "name": "{{ settings.app_name }}"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "{{ settings.app_name }}",
+    "url": "{{ settings.site_url }}"
+  },
+  "url": "{{ settings.site_url }}/hadith/{{ hadith.id }}",
+  "inLanguage": "ar",
+  "about": {
+    "@type": "Thing",
+    "name": "الأربعين النووية - الحديث {{ hadith.id }}"
+  }
+}
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Focused Mode Layout */
+    .detail-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: clamp(24px, 6vw, 48px) clamp(16px, 4vw, 24px);
+    }
+
+    /* Breadcrumb */
+    .breadcrumb {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--color-text-secondary);
+        font-size: clamp(12px, 2.5vw, 14px);
+        margin-bottom: clamp(20px, 5vw, 32px);
+        transition: color 0.3s ease;
+    }
+
+    .breadcrumb:hover {
+        color: var(--color-primary);
+    }
+
+    /* Hadith Content Card */
+    .hadith-content {
+        background-color: var(--color-bg-card);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        padding: clamp(20px, 5vw, 48px);
+        margin-bottom: clamp(20px, 5vw, 32px);
+        animation: fadeIn 0.6s ease-out;
+    }
+
+    .hadith-number {
+        display: inline-block;
+        padding: clamp(6px, 1.5vw, 8px) clamp(12px, 3vw, 16px);
+        background-color: var(--color-primary-soft);
+        color: var(--color-primary);
+        border-radius: var(--radius-md);
+        font-size: clamp(10px, 2vw, 12px);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: clamp(16px, 4vw, 24px);
+    }
+
+    .hadith-title {
+        font-size: clamp(24px, 6vw, 32px);
+        font-weight: 700;
+        color: var(--color-text-primary);
+        line-height: 1.4;
+        margin-bottom: clamp(20px, 5vw, 32px);
+    }
+
+    .hadith-text-box {
+        background-color: var(--color-bg-hover);
+        border-right: 4px solid var(--color-primary);
+        padding: clamp(16px, 4vw, 32px);
+        border-radius: var(--radius-md);
+        margin-bottom: clamp(20px, 5vw, 32px);
+    }
+
+    .hadith-text {
+        font-size: clamp(15px, 3.5vw, 18px);
+        line-height: 2;
+        color: var(--color-text-primary);
+        font-weight: 500;
+    }
+
+    /* Metadata Grid */
+    .metadata-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: clamp(16px, 4vw, 24px);
+        margin-bottom: clamp(20px, 5vw, 32px);
+    }
+
+    @media (min-width: 600px) {
+        .metadata-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (min-width: 900px) {
+        .metadata-grid {
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        }
+    }
+
+    .metadata-item {
+        display: flex;
+        align-items: flex-start;
+        gap: clamp(12px, 3vw, 16px);
+    }
+
+    .metadata-icon {
+        color: var(--color-primary);
+        flex-shrink: 0;
+        margin-top: 4px;
+        font-size: clamp(20px, 5vw, 24px);
+    }
+
+    .metadata-content h4 {
+        font-size: clamp(10px, 2vw, 12px);
+        font-weight: 600;
+        color: var(--color-text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 4px;
+    }
+
+    .metadata-content p {
+        font-size: clamp(14px, 3vw, 16px);
+        font-weight: 600;
+        color: var(--color-text-primary);
+    }
+
+    /* Vocabulary & Benefits */
+    .section {
+        margin-bottom: clamp(20px, 5vw, 32px);
+    }
+
+    .section-title {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        flex-direction: row-reverse;
+        gap: clamp(8px, 2vw, 12px);
+        font-size: clamp(18px, 4vw, 20px);
+        font-weight: 700;
+        color: var(--color-primary);
+        margin-bottom: clamp(12px, 3vw, 16px);
+    }
+
+    .section-title .material-icons-outlined {
+        font-size: clamp(20px, 5vw, 24px);
+        flex-shrink: 0;
+    }
+
+    .section-items {
+        display: grid;
+        gap: clamp(10px, 2.5vw, 12px);
+    }
+
+    .section-item {
+        padding: clamp(12px, 3vw, 16px);
+        background-color: var(--color-bg-hover);
+        border-right: 3px solid var(--color-primary);
+        border-radius: var(--radius-md);
+        font-size: clamp(13px, 3vw, 15px);
+        color: var(--color-text-secondary);
+        line-height: 1.8;
+        animation: fadeIn 0.6s ease-out forwards;
+        opacity: 0;
+    }
+
+    .section-item strong {
+        color: var(--color-primary);
+        font-weight: 700;
+        display: block;
+        margin-bottom: 6px;
+    }
+
+    .section-item:nth-child(1) { animation-delay: 0.2s; }
+    .section-item:nth-child(2) { animation-delay: 0.3s; }
+    .section-item:nth-child(3) { animation-delay: 0.4s; }
+    .section-item:nth-child(4) { animation-delay: 0.5s; }
+    .section-item:nth-child(5) { animation-delay: 0.6s; }
+    .section-item:nth-child(6) { animation-delay: 0.7s; }
+    .section-item:nth-child(7) { animation-delay: 0.8s; }
+    .section-item:nth-child(8) { animation-delay: 0.9s; }
+
+    /* Actions */
+    .actions {
+        display: flex;
+        gap: clamp(8px, 2vw, 12px);
+        padding-top: clamp(16px, 4vw, 24px);
+        border-top: 1px solid var(--color-border);
+        flex-wrap: wrap;
+    }
+
+    .action-btn {
+        padding: clamp(10px, 2vw, 12px) clamp(16px, 3vw, 24px);
+        border-radius: var(--radius-md);
+        border: 1px solid var(--color-border);
+        background-color: transparent;
+        color: var(--color-text-primary);
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-family: var(--font-family);
+        flex: 1;
+        min-width: 120px;
+        min-height: 40px;
+        font-size: clamp(12px, 2.5vw, 14px);
+    }
+
+    .action-btn:hover {
+        background-color: var(--color-primary-soft);
+        border-color: var(--color-primary);
+        color: var(--color-primary);
+    }
+
+    .action-btn.primary {
+        background-color: var(--color-primary);
+        color: white;
+        border-color: var(--color-primary);
+    }
+
+    .action-btn.primary:hover {
+        background-color: var(--color-primary-dark);
+    }
+
+    /* Navigation */
+    .navigation {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: clamp(12px, 3vw, 16px);
+        margin-bottom: clamp(20px, 5vw, 32px);
+    }
+
+    @media (min-width: 600px) {
+        .navigation {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    .nav-link {
+        padding: clamp(12px, 3vw, 16px);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        text-decoration: none;
+        color: var(--color-text-primary);
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        font-size: clamp(12px, 2.5vw, 14px);
+        min-height: 44px;
+    }
+
+    .nav-link:hover {
+        border-color: var(--color-primary);
+        background-color: var(--color-primary-soft);
+        color: var(--color-primary);
+    }
+
+    .nav-link-text {
+        flex: 1;
+        text-align: right;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    /* Comments Section - مماثل للصفحة الرئيسية */
+    .comments-section {
+        margin-top: clamp(32px, 8vw, 64px);
+        animation: fadeIn 0.8s ease-out;
+    }
+
+    .section-header {
+        text-align: center;
+        margin-bottom: clamp(32px, 8vw, 48px);
+    }
+
+    .section-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: clamp(48px, 12vw, 64px);
+        height: clamp(48px, 12vw, 64px);
+        background-color: var(--color-primary-soft);
+        border-radius: var(--radius-lg);
+        color: var(--color-primary);
+        margin-bottom: clamp(12px, 3vw, 16px);
+        transition: all 0.3s ease;
+        font-size: clamp(24px, 6vw, 32px);
+    }
+
+    .section-icon:hover {
+        transform: scale(1.05) rotate(12deg);
+    }
+
+    @media (min-width: 900px) {
+        .section-icon:hover {
+            transform: scale(1.1) rotate(12deg);
+        }
+    }
+
+    .section-title {
+        font-size: clamp(24px, 6vw, 28px);
+        font-weight: 700;
+        color: var(--color-text-primary);
+        margin-bottom: 8px;
+    }
+
+    .section-subtitle {
+        font-size: clamp(14px, 3vw, 16px);
+        color: var(--color-text-secondary);
+    }
+
+    /* Comment Form */
+    .comment-form {
+        background-color: var(--color-bg-card);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        padding: clamp(20px, 5vw, 32px);
+        margin-bottom: clamp(32px, 8vw, 48px);
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--color-text-primary);
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .form-input,
+    .form-textarea {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        background-color: var(--color-bg-hover);
+        color: var(--color-text-primary);
+        font-family: var(--font-family);
+        font-size: 14px;
+        transition: all 0.3s ease;
+    }
+
+    .form-input:focus,
+    .form-textarea:focus {
+        outline: none;
+        border-color: var(--color-primary);
+        background-color: var(--color-bg-card);
+        box-shadow: 0 0 0 3px var(--color-primary-soft);
+    }
+
+    .form-textarea {
+        resize: vertical;
+        min-height: 120px;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: clamp(12px, 3vw, 16px);
+    }
+
+    @media (min-width: 600px) {
+        .form-row {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    .form-actions {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 20px;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .form-hint {
+        font-size: 12px;
+        color: var(--color-text-secondary);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .comment-form button {
+        padding: clamp(10px, 2vw, 12px) clamp(16px, 3vw, 24px);
+        background-color: var(--color-primary);
+        color: white;
+        border: none;
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-family: var(--font-family);
+        min-height: 44px;
+        font-size: clamp(12px, 2.5vw, 14px);
+    }
+
+    @media (max-width: 600px) {
+        .comment-form button {
+            width: 100%;
+        }
+
+        .form-actions {
+            flex-direction: column;
+            align-items: stretch;
+        }
+    }
+
+    .comment-form button:hover {
+        background-color: var(--color-primary-dark);
+        transform: translateY(-1px);
+    }
+
+    /* Comments Grid - نفس تصميم الصفحة الرئيسية */
+    .comments-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+        margin-bottom: 48px;
+    }
+
+    .comment-card {
+        background-color: var(--color-bg-card);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        padding: 20px;
+        transition: all 0.3s ease;
+        animation: fadeIn 0.6s ease-out forwards;
+        opacity: 0;
+    }
+
+    .comment-card:hover {
+        border-color: var(--color-primary);
+        box-shadow: 0 4px 12px var(--color-shadow);
+    }
+
+    .comment-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+    }
+
+    .comment-author {
+        font-weight: 600;
+        color: var(--color-text-primary);
+    }
+
+    .comment-time {
+        font-size: 12px;
+        color: var(--color-text-secondary);
+    }
+
+    .comment-text {
+        white-space: normal;
+        overflow-wrap: break-word;
+        word-wrap: break-word;
+        word-break: break-word;
+        display: block;
+        font-size: 14px;
+        color: var(--color-text-secondary);
+        line-height: 1.8;
+    }
+
+    .no-comments {
+        text-align: center;
+        padding: clamp(48px, 10vw, 64px) clamp(20px, 5vw, 32px);
+        color: var(--color-text-secondary);
+        grid-column: 1/-1;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="detail-container">
+    <a href="/" class="breadcrumb">
+        <span class="material-icons-outlined">arrow_forward</span>
+        العودة للرئيسية
+    </a>
+
+    <!-- Hadith Content -->
+    <div class="hadith-content">
+        <span class="hadith-number">الحديث #{{ hadith.id }}</span>
+        <h1 class="hadith-title">{{ hadith.title }}</h1>
+
+        <div class="hadith-text-box">
+            <p class="hadith-text">{{ hadith.text }}</p>
+        </div>
+
+        <!-- Metadata -->
+        <div class="metadata-grid">
+            <div class="metadata-item">
+                <span class="material-icons-outlined metadata-icon">person</span>
+                <div class="metadata-content">
+                    <h4>الراوي</h4>
+                    <p>{{ hadith.narrator }}</p>
+                </div>
+            </div>
+
+            <div class="metadata-item">
+                <span class="material-icons-outlined metadata-icon">library_books</span>
+                <div class="metadata-content">
+                    <h4>المصدر</h4>
+                    <p>{{ hadith.source }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vocabulary Section -->
+        {% if hadith.vocabulary and hadith.vocabulary|length > 0 %}
+        <div class="section">
+            <h3 class="section-title">
+                <span class="material-icons-outlined">vocabulary</span>
+                المفردات الغريبة
+            </h3>
+            <div class="section-items">
+                {% for vocab_item in hadith.vocabulary %}
+                <div class="section-item">
+                    {% if ':' in vocab_item %}
+                        {% set parts = vocab_item.split(':', 1) %}
+                        <strong>{{ parts[0].strip() }}</strong>
+                        {{ parts[1].strip() }}
+                    {% else %}
+                        {{ vocab_item }}
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Benefits Section -->
+        {% if hadith.benefits and hadith.benefits|length > 0 %}
+        <div class="section">
+            <h3 class="section-title">
+                <span class="material-icons-outlined">lightbulb</span>
+                الفوائد والدروس
+            </h3>
+            <div class="section-items">
+                {% for benefit in hadith.benefits %}
+                <div class="section-item">{{ benefit }}</div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Actions -->
+        <div class="actions">
+            <button class="action-btn" onclick="shareHadith()">
+                <span class="material-icons-outlined">share</span>
+                <span>شارك</span>
+            </button>
+            <button class="action-btn" id="copy-btn" onclick="copyHadith()">
+                <span class="material-icons-outlined" id="copy-icon">content_copy</span>
+                <span id="copy-text">نسخ</span>
+            </button>
+            <button class="action-btn" id="save-btn" onclick="toggleFavorite()">
+                <span class="material-icons-outlined" id="save-icon">bookmark_border</span>
+                <span id="save-text">حفظ</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- إعلان بين الأزرار والتنقل -->
+    {% if settings.adsense_enabled %}
+    <div class="ad-wrapper">
+        <span class="ad-label">إعلان</span>
+        <div class="ad-container">
+            <ins class="adsbygoogle"
+                 style="display:block"
+                 data-ad-client="{{ settings.adsense_client }}"
+                 data-ad-slot="{{ settings.adsense_slot_detail }}"
+                 data-ad-format="auto"
+                 data-full-width-responsive="true"></ins>
+            <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Navigation -->
+    <div class="navigation">
+        {% if prev_hadith %}
+        <a href="/hadith/{{ prev_hadith.id }}" class="nav-link" style="display">
+            <span class="nav-link-text">{{ prev_hadith.title }}</span>
+            <span class="material-icons-outlined">arrow_forward</span>
+        </a>
+        {% endif %}
+
+        {% if next_hadith %}
+        <a href="/hadith/{{ next_hadith.id }}" class="nav-link">
+            <span class="material-icons-outlined">arrow_back</span>
+            <span class="nav-link-text; style: left">{{ next_hadith.title }}</span>
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- Comments Section -->
+    <!-- Comments Section -->
+    <div class="comments-section">
+        <div class="section-header">
+            <div class="section-icon">
+                <span class="material-icons-outlined" style="font-size: 32px;">forum</span>
+            </div>
+            <h2 class="section-title">التعليقات</h2>
+            <p class="section-subtitle">شاركنا فهمك والفوائد المستفادة من هذا الحديث الشريف</p>
+        </div>
+
+        <!-- Comment Form -->
+        <form class="comment-form" onsubmit="handleCommentSubmit(event, HADITH_ID, 'comments-list')">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">اسمك الكريم</label>
+                    <input type="text" class="form-input" id="comment-name" placeholder="مالك" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">بريدك الإلكتروني</label>
+                    <input type="email" class="form-input" id="comment-email" placeholder="example@mail.com" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">شاركنا تعليقك</label>
+                <textarea class="form-textarea" id="comment-text" placeholder="اكتب تعليقك عن هذا الحديث الشريف..." required></textarea>
+            </div>
+
+            <div class="form-actions">
+                <span class="form-hint">
+                    <span class="material-icons-outlined" style="font-size: 16px;">auto_stories</span>
+                    تعليقك على هذا الحديث
+                </span>
+                <button type="submit" class="btn btn-primary">
+                    <span class="material-icons-outlined">send</span>
+                    إرسال التعليق
+                </button>
+            </div>
+        </form>
+
+        <!-- Comments Grid -->
+        <div class="comments-grid" id="comments-list" data-hadith-id="{{ hadith.id }}">
+            </div>
+    </div>
+</div>
+
+<script>
+    const HADITH_ID = {{ hadith.id }};
+    const HADITH_TITLE = {{ hadith.title | tojson }};
+    const HADITH_TEXT = {{ hadith.text | tojson }};
+    const HADITH_NARRATOR = {{ hadith.narrator | tojson }};
+    const HADITH_SOURCE = {{ hadith.source | tojson }};
+
+    // ── زر المشاركة ──────────────────────────────────────────
+    function shareHadith() {
+        const url = window.location.href;
+        if (navigator.share) {
+            navigator.share({ title: HADITH_TITLE, text: HADITH_TEXT.slice(0, 100) + '...', url });
+        } else {
+            navigator.clipboard.writeText(url).then(() => {
+                toastManager.show('تم نسخ رابط الحديث!', 'success');
+            });
+        }
+    }
+
+    // ── زر النسخ مع Toast ────────────────────────────────────
+    function copyHadith() {
+        const fullText = `${HADITH_TITLE}
+
+${HADITH_TEXT}
+
+الراوي: ${HADITH_NARRATOR}
+المصدر: ${HADITH_SOURCE}`;
+        navigator.clipboard.writeText(fullText).then(() => {
+            // تغيير شكل الزر مؤقتاً
+            const icon = document.getElementById('copy-icon');
+            const text = document.getElementById('copy-text');
+            icon.textContent = 'check';
+            text.textContent = 'تم النسخ';
+            document.getElementById('copy-btn').style.borderColor = 'var(--color-primary)';
+            document.getElementById('copy-btn').style.color = 'var(--color-primary)';
+            setTimeout(() => {
+                icon.textContent = 'content_copy';
+                text.textContent = 'نسخ';
+                document.getElementById('copy-btn').style.borderColor = '';
+                document.getElementById('copy-btn').style.color = '';
+            }, 2000);
+            toastManager.show('تم نسخ الحديث بنجاح!', 'success');
+        }).catch(() => {
+            toastManager.show('فشل النسخ، حاول مرة أخرى', 'error');
+        });
+    }
+
+    // ── زر الحفظ الحقيقي بـ localStorage ─────────────────────
+    const SAVED_KEY = 'hadith-saved';
+
+    function getSaved() {
+        try { return JSON.parse(localStorage.getItem(SAVED_KEY)) || []; }
+        catch { return []; }
+    }
+
+    function isSaved() {
+        return getSaved().some(h => h.id === HADITH_ID);
+    }
+
+    function updateSaveBtn() {
+        const saved = isSaved();
+        document.getElementById('save-icon').textContent = saved ? 'bookmark' : 'bookmark_border';
+        document.getElementById('save-text').textContent = saved ? 'محفوظ' : 'حفظ';
+        document.getElementById('save-btn').style.borderColor = saved ? 'var(--color-primary)' : '';
+        document.getElementById('save-btn').style.color = saved ? 'var(--color-primary)' : '';
+    }
+
+    function toggleFavorite() {
+        let saved = getSaved();
+        if (isSaved()) {
+            saved = saved.filter(h => h.id !== HADITH_ID);
+            localStorage.setItem(SAVED_KEY, JSON.stringify(saved));
+            updateSaveBtn();
+            toastManager.show('تم إزالة الحديث من المحفوظات', 'warning');
+        } else {
+            saved.push({ id: HADITH_ID, title: HADITH_TITLE, narrator: HADITH_NARRATOR, savedAt: Date.now() });
+            localStorage.setItem(SAVED_KEY, JSON.stringify(saved));
+            updateSaveBtn();
+            toastManager.show('تم حفظ الحديث في المحفوظات ✨', 'success');
+        }
+    }
+
+    // تهيئة زر الحفظ عند تحميل الصفحة
+    document.addEventListener('DOMContentLoaded', () => {
+        updateSaveBtn();
+        // تحميل التعليقات الخاصة بهذا الحديث
+        loadComments(HADITH_ID, 'comments-list');
+    });
+</script>
+{% endblock %}

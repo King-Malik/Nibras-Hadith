@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}500 - خطأ في الخادم | {{ settings.app_name }}{% endblock %}
+
+{% block og_title %}خطأ في الخادم - {{ settings.app_name }}{% endblock %}
+{% block og_description %}عذراً، حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى لاحقاً.{% endblock %}
+{% block canonical %}{{ settings.site_url }}/{% endblock %}
+
+{% block meta %}
+{{ super() }}
+<meta name="description" content="عذراً، حدث خطأ غير متوقع في موقع نبراس. يرجى المحاولة مرة أخرى.">
+<meta name="robots" content="noindex, nofollow">
+{% endblock %}
+
+{% block content %}
+<div class="flex flex-col items-center justify-center min-h-[calc(100vh-128px)] p-4 text-center">
+    <span class="material-icons-outlined text-[120px] text-red-500 dark:text-red-400">error_outline</span>
+    <h1 class="text-4xl font-bold text-color-text-primary mt-4 mb-2">500</h1>
+    <p class="text-xl text-color-text-secondary mb-8">عذراً، حدث خطأ في السيرفر</p>
+    <a href="/" class="btn btn-primary">
+        العودة للرئيسية
+    </a>
+</div>
+{% endblock %}

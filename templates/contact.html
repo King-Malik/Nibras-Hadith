@@ -1,0 +1,451 @@
+{% extends "base.html" %}
+
+{% block title %}اتصل بنا - تواصل مع فريق نبراس | {{ settings.app_name }}{% endblock %}
+
+{% block og_title %}اتصل بنا - {{ settings.app_name }}{% endblock %}
+{% block og_description %}تواصل مع فريق نبراس لأي استفسار أو اقتراح أو ملاحظة. نسعد بسماع رأيك لتطوير المنصة.{% endblock %}
+{% block og_url %}{{ settings.site_url }}/contact{% endblock %}
+{% block tw_title %}اتصل بنا - {{ settings.app_name }}{% endblock %}
+{% block tw_description %}تواصل مع فريق نبراس لأي استفسار أو اقتراح أو ملاحظة.{% endblock %}
+{% block canonical %}{{ settings.site_url }}/contact{% endblock %}
+
+{% block meta %}
+{{ super() }}
+<meta name="description" content="تواصل مع فريق نبراس لأي استفسار أو اقتراح أو ملاحظة. نسعد بسماع رأيك لتطوير منصة الأربعين النووية.">
+<meta name="keywords" content="اتصل بنا، تواصل مع نبراس، دعم فني، اقتراحات">
+<meta name="robots" content="noindex, follow">
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .contact-container {
+        max-width: 760px;
+        margin: 0 auto;
+        padding: clamp(24px, 6vw, 48px) clamp(16px, 4vw, 24px);
+    }
+
+    .page-header {
+        margin-bottom: 32px;
+        animation: fadeUp 0.5s ease-out;
+    }
+
+    .page-header .breadcrumb {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--color-text-secondary);
+        font-size: 13px;
+        text-decoration: none;
+        margin-bottom: 20px;
+        transition: color 0.2s;
+    }
+    .page-header .breadcrumb:hover { color: var(--color-primary); }
+
+    .page-title {
+        font-size: clamp(26px, 6vw, 36px);
+        font-weight: 700;
+        color: var(--color-text-primary);
+        margin-bottom: 8px;
+    }
+
+    .page-subtitle {
+        font-size: 15px;
+        color: var(--color-text-secondary);
+        line-height: 1.7;
+    }
+
+    /* Info Cards */
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 32px;
+    }
+
+    .info-card {
+        background: var(--color-bg-card);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        text-decoration: none;
+        color: inherit;
+        transition: all 0.2s;
+        animation: fadeUp 0.5s ease-out both;
+    }
+
+    .info-card:nth-child(1) { animation-delay: 0.1s; }
+    .info-card:nth-child(2) { animation-delay: 0.2s; }
+    .info-card:nth-child(3) { animation-delay: 0.3s; }
+
+    .info-card:hover {
+        border-color: var(--color-primary);
+        background: var(--color-primary-soft);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px var(--color-shadow);
+    }
+
+    .info-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: var(--radius-md);
+        background: var(--color-primary-soft);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: background 0.2s;
+    }
+
+    .info-card:hover .info-icon { background: rgba(16,185,129,0.2); }
+    .info-icon .material-icons-outlined { font-size: 22px; color: var(--color-primary); }
+
+    .info-text { min-width: 0; }
+    .info-label { font-size: 11px; font-weight: 600; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px; }
+    .info-value { font-size: 14px; font-weight: 600; color: var(--color-text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    /* Form Card */
+    .form-card {
+        background: var(--color-bg-card);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        padding: clamp(24px, 6vw, 40px);
+        animation: fadeUp 0.6s ease-out 0.2s both;
+    }
+
+    .form-card-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--color-text-primary);
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .form-card-title .material-icons-outlined { color: var(--color-primary); font-size: 22px; }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+
+    @media (min-width: 560px) {
+        .form-row { grid-template-columns: 1fr 1fr; }
+    }
+
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+
+    .form-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--color-text-primary);
+    }
+
+    .form-label span { color: var(--color-primary); margin-right: 2px; }
+
+    .form-input, .form-textarea, .form-select {
+        padding: 11px 14px;
+        border: 1.5px solid var(--color-border);
+        border-radius: var(--radius-md);
+        background: var(--color-bg-hover);
+        color: var(--color-text-primary);
+        font-family: var(--font-family);
+        font-size: 14px;
+        transition: all 0.2s;
+        min-height: 44px;
+    }
+
+    .form-input:focus, .form-textarea:focus, .form-select:focus {
+        outline: none;
+        border-color: var(--color-primary);
+        background: var(--color-bg-card);
+        box-shadow: 0 0 0 3px var(--color-primary-soft);
+    }
+
+    .form-textarea {
+        resize: vertical;
+        min-height: 140px;
+        line-height: 1.7;
+    }
+
+    .form-select option { background: var(--color-bg-card); }
+
+    /* Char counter */
+    .char-counter {
+        font-size: 11px;
+        color: var(--color-text-secondary);
+        text-align: left;
+        margin-top: 2px;
+    }
+    .char-counter.warn { color: #f59e0b; }
+
+    /* Submit */
+    .submit-btn {
+        width: 100%;
+        padding: 13px 24px;
+        background: var(--color-primary);
+        color: white;
+        border: none;
+        border-radius: var(--radius-md);
+        font-family: var(--font-family);
+        font-size: 15px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 8px;
+        min-height: 50px;
+    }
+
+    .submit-btn:hover:not(:disabled) {
+        background: var(--color-primary-dark);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 16px rgba(16,185,129,0.35);
+    }
+
+    .submit-btn:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+    }
+
+    /* Success State */
+    .success-card {
+        display: none;
+        background: var(--color-primary-soft);
+        border: 1px solid rgba(16,185,129,0.3);
+        border-radius: var(--radius-lg);
+        padding: 40px 32px;
+        text-align: center;
+        animation: fadeUp 0.5s ease-out;
+    }
+
+    .success-card.show { display: block; }
+
+    .success-icon {
+        font-size: 56px;
+        margin-bottom: 16px;
+    }
+
+    .success-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--color-text-primary);
+        margin-bottom: 8px;
+    }
+
+    .success-text {
+        font-size: 14px;
+        color: var(--color-text-secondary);
+        line-height: 1.7;
+        margin-bottom: 20px;
+    }
+
+    .back-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 20px;
+        background: var(--color-primary);
+        color: white;
+        border-radius: var(--radius-md);
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 14px;
+        transition: background 0.2s;
+    }
+    .back-btn:hover { background: var(--color-primary-dark); }
+
+    @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="contact-container">
+
+    <!-- Header -->
+    <div class="page-header">
+        <a href="/" class="breadcrumb">
+            <span class="material-icons-outlined">arrow_forward</span>
+            العودة للرئيسية
+        </a>
+        <h1 class="page-title">اتصل بنا</h1>
+        <p class="page-subtitle">نسعد بتواصلك معنا، سواء لتقديم اقتراح أو الإبلاغ عن مشكلة أو أي استفسار آخر.</p>
+    </div>
+
+    <!-- Info Cards -->
+    <div class="info-grid">
+        <a href="mailto:Nibras.help@gmail.com" class="info-card">
+            <div class="info-icon">
+                <span class="material-icons-outlined">email</span>
+            </div>
+            <div class="info-text">
+                <div class="info-label">البريد الإلكتروني</div>
+                <div class="info-value">Nibras.help@gmail.com</div>
+            </div>
+        </a>
+        <a href="https://t.me/NiprasNawawi_bot" target="_blank" class="info-card">
+            <div class="info-icon">
+                <span class="material-icons-outlined">send</span>
+            </div>
+            <div class="info-text">
+                <div class="info-label">تيليجرام</div>
+                <div class="info-value">@NibrasNawawi_bot</div>
+            </div>
+        </a>
+        <div class="info-card" style="cursor:default;">
+            <div class="info-icon">
+                <span class="material-icons-outlined">schedule</span>
+            </div>
+            <div class="info-text">
+                <div class="info-label">وقت الرد</div>
+                <div class="info-value">خلال 24 ساعة</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Card -->
+    <div class="form-card" id="form-card">
+        <div class="form-card-title">
+            <span class="material-icons-outlined">edit_note</span>
+            أرسل رسالتك
+        </div>
+
+        <form id="contact-form" onsubmit="sendMessage(event)" novalidate>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="c-name">الاسم <span>*</span></label>
+                    <input type="text" id="c-name" class="form-input" placeholder="اسمك الكريم" required minlength="2">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="c-email">البريد الإلكتروني <span>*</span></label>
+                    <input type="email" id="c-email" class="form-input" placeholder="example@mail.com" required>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom:16px;">
+                <label class="form-label" for="c-subject">موضوع الرسالة <span>*</span></label>
+                <select id="c-subject" class="form-select" required>
+                    <option value="" disabled selected>اختر الموضوع...</option>
+                    <option value="اقتراح">💡 اقتراح أو فكرة</option>
+                    <option value="مشكلة تقنية">🐛 مشكلة تقنية</option>
+                    <option value="تصحيح محتوى">📖 تصحيح محتوى</option>
+                    <option value="تعاون">🤝 طلب تعاون</option>
+                    <option value="استفسار عام">❓ استفسار عام</option>
+                    <option value="أخرى">📌 أخرى</option>
+                </select>
+            </div>
+
+            <div class="form-group" style="margin-bottom:20px;">
+                <label class="form-label" for="c-message">رسالتك <span>*</span></label>
+                <textarea id="c-message" class="form-textarea" placeholder="اكتب رسالتك هنا..." required minlength="10" maxlength="1000" oninput="updateCounter(this)"></textarea>
+                <div class="char-counter" id="char-counter">0 / 1000</div>
+            </div>
+
+            <button type="submit" class="submit-btn" id="submit-btn">
+                <span class="material-icons-outlined" id="submit-icon">send</span>
+                <span id="submit-text">إرسال الرسالة</span>
+            </button>
+        </form>
+    </div>
+
+    <!-- Success State (hidden initially) -->
+    <div class="success-card" id="success-card">
+        <div class="success-icon">✉️</div>
+        <div class="success-title">تم إرسال رسالتك بنجاح!</div>
+        <div class="success-text">
+            شكراً لتواصلك معنا. سنقوم بمراجعة رسالتك والرد عليك على بريدك الإلكتروني في أقرب وقت ممكن.
+        </div>
+        <a href="/" class="back-btn">
+            <span class="material-icons-outlined">home</span>
+            العودة للرئيسية
+        </a>
+    </div>
+
+</div>
+
+<script>
+function updateCounter(el) {
+    const counter = document.getElementById('char-counter');
+    const len = el.value.length;
+    counter.textContent = `${len} / 1000`;
+    counter.classList.toggle('warn', len > 800);
+}
+
+async function sendMessage(e) {
+    e.preventDefault();
+
+    const name    = document.getElementById('c-name').value.trim();
+    const email   = document.getElementById('c-email').value.trim();
+    const subject = document.getElementById('c-subject').value;
+    const message = document.getElementById('c-message').value.trim();
+
+    // تحقق بسيط
+    if (!name || !email || !subject || !message) {
+        toastManager.show('يرجى تعبئة جميع الحقول المطلوبة', 'error');
+        return;
+    }
+
+    if (message.length < 10) {
+        toastManager.show('الرسالة قصيرة جداً، اكتب على الأقل 10 أحرف', 'warning');
+        return;
+    }
+
+    // تغيير حالة الزر
+    const btn = document.getElementById('submit-btn');
+    const btnIcon = document.getElementById('submit-icon');
+    const btnText = document.getElementById('submit-text');
+    btn.disabled = true;
+    btnIcon.textContent = 'hourglass_empty';
+    btnText.textContent = 'جارٍ الإرسال...';
+
+    try {
+        // إرسال عبر mailto كـ fallback (يفتح تطبيق الإيميل)
+        // في المستقبل يمكن استبداله بـ API حقيقي
+        const mailtoBody = encodeURIComponent(
+            `الاسم: ${name}\nالإيميل: ${email}\nالموضوع: ${subject}\n\nالرسالة:\n${message}`
+        );
+        const mailtoLink = `mailto:Nibras.help@gmail.com?subject=${encodeURIComponent('رسالة من ' + name + ' - ' + subject)}&body=${mailtoBody}`;
+
+        // محاولة الإرسال عبر API أولاً
+        let sent = false;
+        try {
+            const res = await fetch('/api/contact', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, email, subject, message })
+            });
+            if (res.ok) sent = true;
+        } catch {}
+
+        // إذا لم يوجد API، افتح mailto
+        if (!sent) {
+            window.location.href = mailtoLink;
+        }
+
+        // إظهار رسالة النجاح
+        setTimeout(() => {
+            document.getElementById('form-card').style.display = 'none';
+            document.getElementById('success-card').classList.add('show');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }, sent ? 500 : 800);
+
+    } catch (err) {
+        toastManager.show('حدث خطأ، يرجى المحاولة مجدداً', 'error');
+        btn.disabled = false;
+        btnIcon.textContent = 'send';
+        btnText.textContent = 'إرسال الرسالة';
+    }
+}
+</script>
+{% endblock %}

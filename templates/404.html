@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}404 - الصفحة غير موجودة | {{ settings.app_name }}{% endblock %}
+
+{% block og_title %}صفحة غير موجودة - {{ settings.app_name }}{% endblock %}
+{% block og_description %}عذراً، الصفحة التي تبحث عنها غير موجودة. ارجع إلى الصفحة الرئيسية لاستعراض الأربعين النووية.{% endblock %}
+{% block canonical %}{{ settings.site_url }}/{% endblock %}
+
+{% block meta %}
+{{ super() }}
+<meta name="description" content="عذراً، الصفحة التي تبحث عنها غير موجودة في موقع نبراس.">
+<meta name="robots" content="noindex, follow">
+{% endblock %}
+
+{% block content %}
+<div class="flex flex-col items-center justify-center min-h-[calc(100vh-128px)] p-4 text-center">
+    <span class="material-icons-outlined text-[120px] text-red-500 dark:text-red-400">sentiment_dissatisfied</span>
+    <h1 class="text-4xl font-bold text-color-text-primary mt-4 mb-2">404</h1>
+    <p class="text-xl text-color-text-secondary mb-8">عذراً، الصفحة غير موجودة</p>
+    <a href="/" class="btn btn-primary">
+        العودة للرئيسية
+    </a>
+</div>
+{% endblock %}

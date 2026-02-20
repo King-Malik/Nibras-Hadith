@@ -1,0 +1,640 @@
+{% extends "base.html" %}
+
+{% block title %}{{ settings.app_name }} - اقرأ الأربعين النووية وتعلّم الأحاديث النبوية{% endblock %}
+
+{% block og_title %}{{ settings.app_name }} - الأربعين النووية كاملة مع الشرح{% endblock %}
+{% block og_description %}اقرأ الأربعين حديثاً النووية كاملةً مع شرح المفردات والفوائد، وابدأ رحلة تعلّم السنة النبوية الشريفة بطريقة سهلة وتفاعلية.{% endblock %}
+{% block og_url %}{{ settings.site_url }}/{% endblock %}
+{% block tw_title %}{{ settings.app_name }} - الأربعين النووية كاملة مع الشرح{% endblock %}
+{% block tw_description %}اقرأ الأربعين حديثاً النووية كاملةً مع شرح المفردات والفوائد، وابدأ رحلة تعلّم السنة النبوية الشريفة بطريقة سهلة وتفاعلية.{% endblock %}
+{% block canonical %}{{ settings.site_url }}/{% endblock %}
+
+{% block meta %}
+{{ super() }}
+<meta name="description" content="اقرأ الأربعين حديثاً النووية كاملةً مع شرح المفردات والفوائد. تعلّم السنة النبوية الشريفة بطريقة سهلة وتفاعلية مع موقع نبراس.">
+<meta name="keywords" content="الأربعين النووية، أحاديث نبوية، شرح الأحاديث، الإمام النووي، السنة النبوية، فقه الحديث، تعلم الأحاديث، نبراس، صحيح البخاري، صحيح مسلم، حديث النبي">
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Hero Section */
+    .hero-section {
+        padding: clamp(32px, 8vw, 64px) clamp(16px, 4vw, 24px);
+        text-align: center;
+        background: linear-gradient(135deg, var(--color-primary-soft) 0%, transparent 100%);
+    }
+
+    .hero-title {
+        font-size: clamp(28px, 7vw, 56px);
+        font-weight: 700;
+        color: var(--color-text-primary);
+        margin-bottom: clamp(12px, 3vw, 16px);
+        letter-spacing: -0.02em;
+    }
+
+    .hero-subtitle {
+        font-size: clamp(14px, 3vw, 18px);
+        color: var(--color-text-secondary);
+        margin-bottom: clamp(20px, 5vw, 32px);
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    /* Search Bar */
+    .search-container {
+        max-width: 650px;
+        margin: 0 auto clamp(32px, 8vw, 48px);
+        padding: 0 clamp(16px, 4vw, 24px);
+    }
+
+    .search-form {
+        position: relative;
+        display: flex;
+        gap: clamp(8px, 2vw, 12px);
+        flex-wrap: wrap;
+    }
+
+    .search-input {
+        flex: 1;
+        min-width: 200px;
+        padding: clamp(12px, 3vw, 16px) clamp(14px, 3vw, 20px);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--color-border);
+        background-color: var(--color-bg-card);
+        color: var(--color-text-primary);
+        font-family: var(--font-family);
+        font-size: clamp(14px, 3vw, 16px);
+        transition: all 0.3s ease;
+        min-height: 44px;
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: var(--color-primary);
+        box-shadow: 0 0 0 3px var(--color-primary-soft);
+    }
+
+    .search-button {
+        padding: clamp(12px, 3vw, 16px) clamp(16px, 3vw, 24px);
+        background-color: var(--color-primary);
+        color: white;
+        border: none;
+        border-radius: var(--radius-lg);
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-family: var(--font-family);
+        font-size: clamp(12px, 3vw, 14px);
+        min-height: 44px;
+        white-space: nowrap;
+    }
+
+    .search-button:hover {
+        background-color: var(--color-primary-dark);
+        transform: translateY(-1px);
+    }
+
+    @media (max-width: 599px) {
+        .search-form {
+            flex-direction: column;
+        }
+
+        .search-input {
+            min-width: 100%;
+            width: 100%;
+        }
+
+        .search-button {
+            width: 100%;
+        }
+    }
+
+    /* Grid System */
+    .hadiths-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: clamp(16px, 4vw, 24px);
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 clamp(16px, 4vw, 24px) clamp(32px, 8vw, 64px);
+    }
+
+    @media (min-width: 600px) {
+        .hadiths-grid {
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        }
+    }
+
+    @media (min-width: 900px) {
+        .hadiths-grid {
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        }
+    }
+
+    /* Hadith Card */
+    .hadith-card {
+        background-color: var(--color-bg-card);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        padding: clamp(16px, 4vw, 24px);
+        display: flex;
+        flex-direction: column;
+        gap: clamp(12px, 3vw, 16px);
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .hadith-card:hover {
+        border-color: var(--color-primary);
+        transform: translateY(-4px);
+        box-shadow: 0 10px 30px var(--color-shadow);
+    }
+
+    @media (min-width: 900px) {
+        .hadith-card:hover {
+            transform: translateY(-8px);
+        }
+    }
+
+    .hadith-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .hadith-number {
+        display: inline-block;
+        padding: 6px 12px;
+        background-color: var(--color-primary-soft);
+        color: var(--color-primary);
+        border-radius: var(--radius-md);
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .hadith-card-icon {
+        color: var(--color-text-secondary);
+        opacity: 0.6;
+    }
+
+    .hadith-title {
+        font-size: clamp(16px, 3vw, 18px);
+        font-weight: 600;
+        color: var(--color-text-primary);
+        line-height: 1.6;
+    }
+
+    .hadith-text {
+        font-size: clamp(13px, 2.5vw, 15px);
+        color: var(--color-text-secondary);
+        line-height: 1.8;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        font-style: italic;
+    }
+
+    @media (min-width: 900px) {
+        .hadith-text {
+            -webkit-line-clamp: 4;
+        }
+    }
+
+    .hadith-actions {
+        display: flex;
+        flex-direction: column;
+        gap: clamp(10px, 2vw, 12px);
+        margin-top: clamp(8px, 2vw, 12px);
+    }
+
+    .hadith-action-btn {
+        padding: clamp(10px, 2vw, 12px) clamp(12px, 3vw, 16px);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        background-color: transparent;
+        color: var(--color-text-primary);
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-family: var(--font-family);
+        font-size: clamp(12px, 2.5vw, 14px);
+        min-height: 40px;
+    }
+
+    .hadith-action-btn:hover {
+        background-color: var(--color-primary-soft);
+        border-color: var(--color-primary);
+        color: var(--color-primary);
+    }
+
+    .hadith-action-btn.primary {
+        background-color: var(--color-primary);
+        color: white;
+        border-color: var(--color-primary);
+    }
+
+    .hadith-action-btn.primary:hover {
+        background-color: var(--color-primary-dark);
+    }
+
+    /* Comments Section */
+    .comments-section {
+        max-width: 1200px;
+        margin: clamp(32px, 8vw, 64px) auto 0;
+        padding: 0 clamp(16px, 4vw, 24px);
+    }
+
+    .section-header {
+        text-align: center;
+        margin-bottom: clamp(32px, 8vw, 48px);
+    }
+
+    .section-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: clamp(48px, 12vw, 64px);
+        height: clamp(48px, 12vw, 64px);
+        background-color: var(--color-primary-soft);
+        border-radius: var(--radius-lg);
+        color: var(--color-primary);
+        margin-bottom: clamp(12px, 3vw, 16px);
+        transition: all 0.3s ease;
+        font-size: clamp(24px, 6vw, 32px);
+    }
+
+    .section-icon:hover {
+        transform: scale(1.05) rotate(12deg);
+    }
+
+    @media (min-width: 900px) {
+        .section-icon:hover {
+            transform: scale(1.1) rotate(12deg);
+        }
+    }
+
+    .section-title {
+        font-size: clamp(24px, 6vw, 28px);
+        font-weight: 700;
+        color: var(--color-text-primary);
+        margin-bottom: 8px;
+    }
+
+    .section-subtitle {
+        font-size: clamp(14px, 3vw, 16px);
+        color: var(--color-text-secondary);
+    }
+
+    /* Comment Form */
+    .comment-form {
+        background-color: var(--color-bg-card);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        padding: clamp(20px, 5vw, 32px);
+        margin-bottom: clamp(32px, 8vw, 48px);
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--color-text-primary);
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .form-input,
+    .form-textarea {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        background-color: var(--color-bg-hover);
+        color: var(--color-text-primary);
+        font-family: var(--font-family);
+        font-size: 14px;
+        transition: all 0.3s ease;
+    }
+
+    .form-input:focus,
+    .form-textarea:focus {
+        outline: none;
+        border-color: var(--color-primary);
+        background-color: var(--color-bg-card);
+        box-shadow: 0 0 0 3px var(--color-primary-soft);
+    }
+
+    .form-textarea {
+        resize: vertical;
+        min-height: 120px;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+
+    .form-actions {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 20px;
+    }
+
+    .form-hint {
+        font-size: 12px;
+        color: var(--color-text-secondary);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    /* Comments Grid */
+    .comments-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+        margin-bottom: 48px;
+    }
+
+    .comment-card {
+        background-color: var(--color-bg-card);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        padding: 20px;
+        transition: all 0.3s ease;
+    }
+
+    .comment-card:hover {
+        border-color: var(--color-primary);
+        box-shadow: 0 4px 12px var(--color-shadow);
+    }
+
+    .comment-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+    }
+
+    .comment-author {
+        font-weight: 600;
+        color: var(--color-text-primary);
+    }
+
+    .comment-time {
+        font-size: 12px;
+        color: var(--color-text-secondary);
+    }
+
+    .comment-text {
+        white-space: normal;
+        overflow-wrap: break-word;
+        word-wrap: break-word;
+        word-break: break-word;
+        display: block;
+        font-size: 14px;
+        color: var(--color-text-secondary);
+        line-height: 1.8;
+    }
+
+    /* Animations */
+    .fade-in {
+        animation: fadeIn 0.6s ease-out forwards;
+        opacity: 0;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Stagger Animation */
+    .stagger-1 { animation-delay: 0.1s; }
+    .stagger-2 { animation-delay: 0.2s; }
+    .stagger-3 { animation-delay: 0.3s; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .hero-section {
+            padding: 48px 16px;
+        }
+
+        .hadiths-grid {
+            grid-template-columns: 1fr;
+            padding-bottom: 48px;
+        }
+
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+
+        .form-actions {
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .comments-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="hero-section fade-in">
+    <h1 class="hero-title">{{ settings.app_name }}</h1>
+    <p class="hero-subtitle">لنتشارك الأجر • {{ total_hadiths }} حديث نبوي شريف</p>
+
+    <div class="search-container">
+        <form method="get" action="/" class="search-form">
+            <input type="search" name="q" value="{{ search_query }}" placeholder="ابحث في رحاب السنة..." class="search-input">
+            <button type="submit" class="search-button">
+                <span class="material-icons-outlined">search</span>
+                بحث
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- إعلان بعد شريط البحث -->
+{% if settings.adsense_enabled %}
+<div class="ad-wrapper">
+    <span class="ad-label">إعلان</span>
+    <div class="ad-container">
+        <ins class="adsbygoogle"
+             style="display:block"
+             data-ad-client="{{ settings.adsense_client }}"
+             data-ad-slot="{{ settings.adsense_slot_index }}"
+             data-ad-format="auto"
+             data-full-width-responsive="true"></ins>
+        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    </div>
+</div>
+{% endif %}
+
+<!-- Hadiths Grid -->
+<div class="hadiths-grid">
+    {% if hadiths %}
+        {% for h in hadiths %}
+        <article class="hadith-card fade-in stagger-{{ (loop.index0 % 3) + 1 }}">
+            <div class="hadith-card-header">
+                <span class="hadith-number">الحديث {{ h.id }}</span>
+                <span class="material-icons-outlined hadith-card-icon">auto_stories</span>
+            </div>
+
+            <h2 class="hadith-title">{{ h.title }}</h2>
+            <p class="hadith-text">"{{ h.text }}"</p>
+
+            <div class="hadith-actions">
+                <a href="/hadith/{{ h.id }}" class="hadith-action-btn primary">
+                    <span class="material-icons-outlined">visibility</span>
+                    عرض التفاصيل
+                </a>
+                <button class="hadith-action-btn share-btn" data-hadith-id="{{ h.id }}" data-hadith-title="{{ h.title }}">
+                    <span class="material-icons-outlined">share</span>
+                    مشاركة الأجر
+                </button>
+            </div>
+        </article>
+
+        {# إعلان بعد كل 6 بطاقات #}
+        {% if loop.index % 6 == 0 and not loop.last and settings.adsense_enabled %}
+        <div class="ad-in-grid ad-wrapper">
+            <span class="ad-label">إعلان</span>
+            <div class="ad-container">
+                <ins class="adsbygoogle"
+                     style="display:block"
+                     data-ad-client="{{ settings.adsense_client }}"
+                     data-ad-slot="{{ settings.adsense_slot_index_grid }}"
+                     data-ad-format="auto"
+                     data-full-width-responsive="true"></ins>
+                <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+            </div>
+        </div>
+        {% endif %}
+
+        {% endfor %}
+    {% else %}
+    <div style="grid-column: 1/-1; text-align: center; padding: 48px 24px;">
+        <p style="color: var(--color-text-secondary); font-size: 16px;">لم يتم العثور على أحاديث</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Comments Section -->
+<section class="comments-section">
+    <div class="section-header">
+        <div class="section-icon">
+            <span class="material-icons-outlined" style="font-size: 32px;">forum</span>
+        </div>
+        <h2 class="section-title">شاركنا فوائدك وتعليقاتك</h2>
+        <p class="section-subtitle">استفادتك وتجربتك تُثري الجميع • المشاركة أجر مستمر</p>
+    </div>
+
+    <!-- Comment Form -->
+    <form id="generalCommentForm" class="comment-form" onsubmit="handleCommentSubmit(event, 0, 'commentsContainer')">
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">اسمك الكريم</label>
+                <input type="text" id="generalName" placeholder="مالك" required class="form-input">
+            </div>
+            <div class="form-group">
+                <label class="form-label">بريدك الإلكتروني</label>
+                <input type="email" id="generalEmail" placeholder="example@mail.com" required class="form-input">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">شاركنا استفادتك أو تعليقك</label>
+            <textarea id="generalComment" placeholder="اكتب فائدة استفدتها من الأحاديث، أو تعليقاً تود مشاركته..." required class="form-textarea"></textarea>
+        </div>
+
+        <div class="form-actions">
+            <span class="form-hint">
+                <span class="material-icons-outlined" style="font-size: 16px;">public</span>
+                تعليقك سيظهر للجميع مباشرة
+            </span>
+            <button type="submit" id="generalSubmitBtn" class="btn btn-primary">
+                <span class="material-icons-outlined">send</span>
+                نشر التعليق
+            </button>
+        </div>
+    </form>
+
+    <!-- Comments List -->
+    <div id="commentsContainer" class="comments-grid">
+        <div style="grid-column: 1/-1; text-align: center; padding: 48px 24px;">
+            <p style="color: var(--color-text-secondary);">جارٍ تحميل التعليقات...</p>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Share functionality
+    document.querySelectorAll('.share-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const hadithId = this.dataset.hadithId;
+            const hadithTitle = this.dataset.hadithTitle;
+            const shareText = `${hadithTitle} - نبراس`;
+            const shareUrl = `${window.location.origin}/hadith/${hadithId}`;
+
+            if (navigator.share) {
+                navigator.share({
+                    title: shareText,
+                    url: shareUrl
+                });
+            } else {
+                showToast('تم نسخ الرابط إلى الحافظة', 'success');
+                navigator.clipboard.writeText(shareUrl);
+            }
+        });
+    });
+
+    // Initial load
+    document.addEventListener('DOMContentLoaded', () => {
+        loadComments(0, 'commentsContainer');
+    });
+
+    // Toast notification
+    function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.textContent = message;
+        
+        const container = document.querySelector('.toast-container') || 
+            (() => {
+                const c = document.createElement('div');
+                c.className = 'toast-container';
+                document.body.appendChild(c);
+                return c;
+            })();
+        
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+</script>
+{% endblock %}

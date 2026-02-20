@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    
+    <meta name="google-site-verification" content="FRpSugqSLCLpFy7GgtvxcCh6atLrXE-sJr0VTUtgcoE" />
+    
+    <!-- ══ اسم الموقع الصريح لجوجل ══ -->    
+    <meta name="application-name" content="نبراس">
+
+    <script type="application/ld+json">
+    {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "نبراس",
+    "alternateName": "نبراس - الأربعون النووية",
+    "url": "https://nibras-hadith.onrender.com",
+    "description": "مرجع شامل للأربعين النووية - الأحاديث النبوية الشريفة مع الشرح والفوائد",
+    "inLanguage": "ar"
+    }
+    </script>
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    
+    <title>{% block title %}{{ settings.app_name }}{% endblock %}</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    <link rel="shortcut icon" type="image/x-icon" href="/static/favicon.ico">
+    
+    {% block meta %}
+    <!-- ══ Primary Meta ══ -->
+    <meta name="description" content="نبراس - مرجعك الشامل للأربعين النووية، اقرأ الأحاديث النبوية الشريفة مع شرحها ومعاني مفرداتها وفوائدها، واختبر معلوماتك بطريقة تفاعلية.">
+    <meta name="keywords" content="الأربعين النووية، أحاديث نبوية، شرح الأحاديث، السنة النبوية، صحيح البخاري، صحيح مسلم، الإمام النووي، فقه الحديث، نبراس">
+    <meta name="author" content="نبراس">
+    <meta name="robots" content="index, follow">
+    <meta name="language" content="ar">
+
+    <!-- ══ Open Graph ══ -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="{{ settings.app_name }}">
+    <meta property="og:title" content="{% block og_title %}{{ settings.app_name }} - الأربعين النووية{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}نبراس - مرجعك الشامل للأربعين النووية، اقرأ الأحاديث النبوية الشريفة مع شرحها ومعاني مفرداتها وفوائدها.{% endblock %}">
+    <meta property="og:url" content="{% block og_url %}{{ settings.site_url }}{% endblock %}">
+    <meta property="og:image" content="{% block og_image %}{{ settings.site_url }}/static/icons/icon-512x512.png{% endblock %}">
+    <meta property="og:image:width" content="512">
+    <meta property="og:image:height" content="512">
+    <meta property="og:locale" content="ar_SA">
+
+    <!-- ══ Twitter Card ══ -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{% block tw_title %}{{ settings.app_name }} - الأربعين النووية{% endblock %}">
+    <meta name="twitter:description" content="{% block tw_description %}نبراس - مرجعك الشامل للأربعين النووية، اقرأ الأحاديث النبوية الشريفة مع شرحها ومعاني مفرداتها وفوائدها.{% endblock %}">
+    <meta name="twitter:image" content="{% block tw_image %}{{ settings.site_url }}/static/icons/icon-512x512.png{% endblock %}">
+
+    <!-- ══ Canonical ══ -->
+    <link rel="canonical" href="{% block canonical %}{{ settings.site_url }}{% endblock %}">
+
+    <!-- ══ Schema.org WebSite ══ -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "{{ settings.app_name }}",
+      "url": "{{ settings.site_url }}",
+      "description": "مرجع شامل للأربعين النووية - الأحاديث النبوية الشريفة مع الشرح والفوائد",
+      "inLanguage": "ar",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "{{ settings.site_url }}/?q={search_term_string}"
+        },
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+    {% endblock %}
+    
+    <!-- PWA -->
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#10b981">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="نبراس">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon" href="/static/icons/icon-180x180.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/static/icons/icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/icons/icon-180x180.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="/static/icons/icon-192x192.png">
+    
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    
+    <!-- Google AdSense -->
+    {% if settings.adsense_enabled %}
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={{ settings.adsense_client }}" crossorigin="anonymous"></script>
+    {% endif %}
+
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="/static/css/main.css">
+    
+    {% block extra_css %}{% endblock %}
+    
+    <!-- Theme Initialization -->
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('hadith-app-theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
+
+    <style>
+        /* ===== أنماط الإعلانات ===== */
+        .ad-wrapper {
+            width: 100%;
+            margin: 24px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .ad-label {
+            font-size: 10px;
+            color: var(--color-text-secondary, #9ca3af);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            opacity: 0.7;
+            align-self: flex-start;
+            padding: 0 4px;
+        }
+
+        .ad-container {
+            width: 100%;
+            background: repeating-linear-gradient(
+                45deg,
+                rgba(245, 158, 11, 0.04) 0px,
+                rgba(245, 158, 11, 0.04) 2px,
+                transparent 2px,
+                transparent 8px
+            );
+            border: 1.5px dashed rgba(245, 158, 11, 0.3);
+            border-radius: 12px;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 90px;
+            transition: border-color 0.3s;
+        }
+
+        .ad-container:hover {
+            border-color: rgba(245, 158, 11, 0.55);
+        }
+
+        .ad-container ins.adsbygoogle {
+            display: block;
+            width: 100%;
+        }
+
+        /* داخل شبكة البطاقات */
+        .ad-in-grid {
+            grid-column: 1 / -1;
+        }
+
+        /* Supabase-style CSS Variables with RGB values for backdrop-filter */
+        :root {
+            --color-bg-main-rgb: 248, 250, 252;
+        }
+        
+        .dark {
+            --color-bg-main-rgb: 10, 10, 10;
+        }
+
+        /* Navigation Bar Styles */
+        .navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 24px;
+            min-height: 72px;
+            background: rgba(var(--color-bg-main-rgb), 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--color-border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .navbar-brand {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--color-primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-direction: row;
+            padding: 4px 0;
+        }
+
+        .navbar-brand-text {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            justify-content: center;
+        }
+
+        .navbar-brand-main {
+            font-size: 20px;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .navbar-brand-sub {
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--color-text-secondary);
+            line-height: 1.2;
+            margin-top: 2px;
+        }
+
+        .navbar-nav {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .navbar-nav a {
+            color: var(--color-text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 15px;
+            transition: color 0.3s ease;
+            padding: 8px 0;
+        }
+
+        .navbar-nav a:hover {
+            color: var(--color-primary);
+        }
+
+        /* Navbar Actions Group */
+        .navbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-right: auto;
+        }
+
+        /* Profile Button */
+        .profile-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: rgba(var(--color-bg-main-rgb), 0.8);
+            backdrop-filter: blur(12px);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--color-border);
+            cursor: pointer;
+            color: var(--color-text-primary);
+            text-decoration: none;
+        }
+
+        .profile-btn:hover {
+            background-color: var(--color-primary-soft);
+            border-color: var(--color-primary);
+            color: var(--color-primary);
+            transform: translateY(-1px);
+        }
+
+        .profile-btn .material-icons-outlined {
+            font-size: 22px;
+        }
+
+        /* Theme Toggle Button */
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: rgba(var(--color-bg-main-rgb), 0.8);
+            backdrop-filter: blur(12px);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--color-border);
+            cursor: pointer;
+            color: var(--color-text-primary);
+        }
+
+        .theme-toggle:hover {
+            background-color: var(--color-primary-soft);
+            border-color: var(--color-primary);
+            transform: translateY(-1px);
+        }
+
+        /* Main Content */
+        main {
+            flex: 1;
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--color-bg-card);
+            border-top: 1px solid var(--color-border);
+            padding: 32px 24px;
+            margin-top: 64px;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 32px;
+        }
+
+        .footer-section h4 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .footer-section ul {
+            list-style: none;
+        }
+
+        .footer-section a {
+            color: var(--color-text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.3s ease;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .footer-section a:hover {
+            color: var(--color-primary);
+        }
+
+        .footer-bottom {
+            border-top: 1px solid var(--color-border);
+            margin-top: 24px;
+            padding-top: 24px;
+            text-align: center;
+            color: var(--color-text-secondary);
+            font-size: 14px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 8px 16px;
+                min-height: 64px;
+            }
+
+            .navbar-brand {
+                gap: 8px;
+            }
+
+            .navbar-brand-main {
+                font-size: 18px;
+            }
+
+            .navbar-brand-sub {
+                font-size: 10px;
+            }
+
+            .navbar-nav {
+                gap: 16px;
+            }
+
+            .navbar-nav a {
+                font-size: 14px;
+            }
+
+            .footer-content {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <a href="/" class="navbar-brand">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <rect width="24" height="24" rx="6" fill="transparent"/>
+                <rect x="10.8" y="10.8" width="2.4" height="2.4" transform="rotate(45 12 12)" fill="#10b981"/>
+                <path d="M13 18C15 18 17.5 17 19.5 15.5V6.5C17.5 8 15 9 13 9" stroke="#10b981" stroke-width="1.2" stroke-linecap="round"/>
+                <path d="M11 18C9 18 6.5 17 4.5 15.5V6.5C6.5 8 9 9 11 9" stroke="#10b981" stroke-width="1.2" stroke-linecap="round"/>
+                <path d="M12 7V4" stroke="#10b981" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/>
+                <circle cx="12" cy="2.5" r="1" fill="#10b981"/>
+            </svg>
+            <div class="navbar-brand-text">
+                <span class="navbar-brand-main">{{ settings.app_name }}</span>
+                <span class="navbar-brand-sub">{{ settings.app_subtitle }}</span>
+            </div>
+        </a>
+        
+        <ul class="navbar-nav">
+            <li><a href="/">الرئيسية</a></li>
+            <li><a href="/quiz">اختبر نفسك</a></li>
+            
+        </ul>
+
+        <div class="navbar-actions">
+            <a href="/profile" class="profile-btn" aria-label="الملف الشخصي" title="ملفي الشخصي">
+                <span class="material-icons-outlined">account_circle</span>
+            </a>
+            <button id="theme-toggle" class="theme-toggle" aria-label="تبديل الوضع الليلي">
+                <span id="theme-icon" class="material-icons-outlined">dark_mode</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>عن الموقع</h4>
+                <p style="color: var(--color-text-secondary); font-size: 14px; line-height: 1.8;">
+موقع متخصص في تقديم الأربعين النووية بطريقة عصرية وسهلة الاستخدام، تجمع بين الأصالة في المحتوى والابتكار في العرض.
+                </p>
+            </div>
+
+            <div class="footer-section">
+                <h4>الروابط السريعة</h4>
+                <ul>
+                    <li><a href="/">الرئيسية</a></li>
+                    <li><a href="/comments">جميع التعليقات</a></li>
+                    <li><a href="/about">عن الموقع</a></li>
+                    <li><a href="/contact">اتصل بنا</a></li>
+                    <li><a href="/privacy">سياسة الخصوصية</a></li>
+                    <li><a href="/terms">شروط الاستخدام</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-section">
+                <h4>التواصل</h4>
+                <ul>
+                    <li><a href="/contact">صفحة اتصل بنا</a></li>
+                    <li><a href="https://t.me/NibrasNawawi_bot">تيليجرام</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+    <p>
+        &copy; <span id="dynamic-year">2026</span> {{ settings.app_name }}. جميع الحقوق محفوظة.
+        <br>
+        تصميم وتطوير: <span class="glowing-name">مالك</span>
+    </p>
+</div>
+
+<style>
+    .glowing-name {
+        color: #00ff00; /* لون أخضر فاقع */
+        font-weight: bold;
+        /* تأثير الإشعاع (Glow) */
+        text-shadow: 0 0 8px rgba(0, 255, 0, 0.8), 
+                     0 0 15px rgba(0, 255, 0, 0.5);
+        display: inline-block;
+    }
+</style>
+
+    </footer>
+
+    <!-- Main JS -->
+    <script src="/static/js/main.js"></script>
+
+    <script>
+        window.onload = function() {
+            const startYear = 2026;
+            const currentYear = new Date().getFullYear();
+            const displayYear = currentYear > startYear ? `${startYear} - ${currentYear}` : startYear;
+            document.getElementById('dynamic-year').textContent = displayYear;
+        };
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+
+    <!-- PWA Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('/static/sw.js')
+                    .then(function (registration) {
+                        console.log('✅ ServiceWorker registered:', registration.sc

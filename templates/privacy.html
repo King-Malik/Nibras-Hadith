@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+
+{% block title %}سياسة الخصوصية | {{ settings.app_name }}{% endblock %}
+
+{% block og_title %}سياسة الخصوصية - {{ settings.app_name }}{% endblock %}
+{% block og_description %}اطّلع على سياسة الخصوصية لموقع نبراس ومعرفة كيفية جمع البيانات والحفاظ عليها.{% endblock %}
+{% block og_url %}{{ settings.site_url }}/privacy{% endblock %}
+{% block tw_title %}سياسة الخصوصية - {{ settings.app_name }}{% endblock %}
+{% block tw_description %}اطّلع على سياسة الخصوصية لموقع نبراس.{% endblock %}
+{% block canonical %}{{ settings.site_url }}/privacy{% endblock %}
+
+{% block meta %}
+{{ super() }}
+<meta name="description" content="سياسة الخصوصية لموقع نبراس - تعرّف على كيفية جمع المعلومات والحفاظ عليها وحقوقك كمستخدم.">
+<meta name="keywords" content="سياسة الخصوصية، نبراس، حماية البيانات">
+<meta name="robots" content="noindex, follow">
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .privacy-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 48px 24px;
+    }
+
+    .privacy-header {
+        margin-bottom: 48px;
+    }
+
+    .breadcrumb {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--color-text-secondary);
+        font-size: 14px;
+        margin-bottom: 24px;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+
+    .breadcrumb:hover {
+        color: var(--color-primary);
+    }
+
+    .page-title {
+        font-size: 40px;
+        font-weight: 700;
+        color: var(--color-text-primary);
+        margin-bottom: 8px;
+    }
+
+    .page-subtitle {
+        color: var(--color-text-secondary);
+        font-size: 14px;
+    }
+
+    .section {
+        background-color: var(--color-bg-card);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        padding: 32px;
+        margin-bottom: 24px;
+        animation: fadeIn 0.6s ease-out forwards;
+        opacity: 0;
+    }
+
+    /* تأخير الأنيميشن للأقسام المتتالية */
+    .section:nth-child(1) { animation-delay: 0.1s; }
+    .section:nth-child(2) { animation-delay: 0.2s; }
+    .section:nth-child(3) { animation-delay: 0.3s; }
+    .section:nth-child(4) { animation-delay: 0.4s; }
+    .section:nth-child(5) { animation-delay: 0.5s; }
+    .section:nth-child(6) { animation-delay: 0.6s; }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--color-primary);
+        margin-bottom: 24px;
+    }
+
+    .section-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 48px;
+        height: 48px;
+        background-color: var(--color-primary-soft);
+        border-radius: var(--radius-md);
+        color: var(--color-primary);
+    }
+
+    .section-text {
+        color: var(--color-text-secondary);
+        line-height: 1.8;
+        margin-bottom: 16px;
+    }
+
+    .info-card-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 16px;
+        margin-top: 16px;
+    }
+
+    .info-card {
+        background-color: var(--color-bg-hover);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        padding: 20px;
+    }
+
+    .info-card-title {
+        font-weight: 700;
+        color: var(--color-primary);
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .list-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    .list-icon {
+        color: #10b981; /* Green for checkmarks */
+        flex-shrink: 0;
+        margin-top: 2px;
+    }
+
+    .contact-note {
+        background-color: var(--color-primary-soft);
+        border-right: 4px solid var(--color-primary);
+        padding: 20px;
+        border-radius: var(--radius-md);
+        margin-top: 24px;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 768px) {
+        .privacy-container { padding: 24px 16px; }
+        .page-title { font-size: 28px; }
+        .section { padding: 20px; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="privacy-container">
+    <div class="privacy-header">
+        <a href="/" class="breadcrumb">
+            <span class="material-icons-outlined">arrow_forward</span>
+            العودة للرئيسية
+        </a>
+        <h1 class="page-title">سياسة الخصوصية</h1>
+        <p class="page-subtitle">آخر تحديث: {{ now().strftime('%Y-%m-%d') }}</p>
+    </div>
+
+    <section class="section">
+        <div class="section-header">
+            <span class="material-icons-outlined section-icon">gavel</span>
+            مقدمة
+        </div>
+        <p class="section-text">
+            نحن في موقع <strong>{{ settings.app_name }}</strong> نلتزم بحماية خصوصيتك وبياناتك الشخصية. توضح هذه السياسة كيفية جمع واستخدام وحماية معلوماتك عند استخدامك لموقعنا.
+        </p>
+    </section>
+
+    <section class="section">
+        <div class="section-header">
+            <span class="material-icons-outlined section-icon">info</span>
+            المعلومات التي نجمعها
+        </div>
+        <div class="info-card-grid">
+            <div class="info-card">
+                <span class="info-card-title">1. معلومات الاستخدام</span>
+                <p class="section-text" style="font-size: 14px;">نقوم بجمع معلومات حول كيفية استخدامك للموقع، بما في ذلك الصفحات التي تزورها والوقت الذي تقضيه.</p>
+            </div>
+            <div class="info-card">
+                <span class="info-card-title">2. البيانات المحلية</span>
+                <p class="section-text" style="font-size: 14px;">نستخدم localStorage لحفظ تفضيلات الوضع المظلم وتقدمك في الاختبارات (مخزنة على جهازك فقط).</p>
+            </div>
+            <div class="info-card">
+                <span class="info-card-title">3. معلومات تقنية</span>
+                <p class="section-text" style="font-size: 14px;">مثل نوع المتصفح وعنوان IP لتحسين الأداء العام وحماية الموقع.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="section-header">
+            <span class="material-icons-outlined section-icon">security</span>
+            كيف نحمي بياناتك
+        </div>
+        <div class="list-item">
+            <span class="material-icons-outlined list-icon">check_circle</span>
+            <p class="section-text">نستخدم تشفير HTTPS لحماية البيانات أثناء النقل.</p>
+        </div>
+        <div class="list-item">
+            <span class="material-icons-outlined list-icon">check_circle</span>
+            <p class="section-text">لا نطلب ولا نجمع معلومات شخصية حساسة مثل الأسماء أو الإيميلات.</p>
+        </div>
+        <div class="list-item">
+            <span class="material-icons-outlined list-icon">check_circle</span>
+            <p class="section-text">لا يتم مشاركة أي بيانات يتم جمعها مع أي أطراف ثالثة نهائياً.</p>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="section-header">
+            <span class="material-icons-outlined section-icon">child_care</span>
+            خصوصية الأطفال وحقوقك
+        </div>
+        <p class="section-text">
+            موقعنا مناسب لجميع الأعمار. لديك الحق الكامل في حذف بياناتك المحلية عبر إعدادات المتصفح، ونحن لا نجمع أي بيانات عن الأطفال دون سن 13 عاماً.
+        </p>
+    </section>
+
+    <section class="section">
+        <div class="section-header">
+            <span class="material-icons-outlined section-icon">contact_support</span>
+            هل لديك استفسار؟
+        </div>
+        <div class="contact-note">
+            <p class="section-text" style="margin-bottom: 0; color: var(--color-primary);">
+                إذا كان لديك أي أسئلة حول سياسة الخصوصية، يرجى التواصل معنا عبر صفحة 
+                <a href="/contact" style="font-weight: 700; text-decoration: underline;">اتصل بنا</a>.
+            </p>
+        </div>
+    </section>
+</div>
+{% endblock %}

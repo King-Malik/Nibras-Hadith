@@ -1,0 +1,340 @@
+{% extends "base.html" %}
+
+{% block title %}{{ quiz_title }} - اختبر نفسك | {{ settings.app_name }}{% endblock %}
+
+{% block og_title %}{{ quiz_title }} - {{ settings.app_name }}{% endblock %}
+{% block og_description %}اختبر معلوماتك في الأربعين النووية - {{ quiz_title }}. أسئلة تفاعلية متنوعة في أحاديث النبي ﷺ.{% endblock %}
+{% block og_url %}{{ settings.site_url }}/quiz/start{% endblock %}
+{% block tw_title %}{{ quiz_title }} - {{ settings.app_name }}{% endblock %}
+{% block tw_description %}اختبر معلوماتك في الأربعين النووية - {{ quiz_title }}.{% endblock %}
+{% block canonical %}{{ settings.site_url }}/quiz{% endblock %}
+
+{% block meta %}
+{{ super() }}
+<meta name="description" content="اختبر معلوماتك في أحاديث الأربعين النووية - {{ quiz_title }}. أسئلة تفاعلية في علم الحديث النبوي الشريف.">
+<meta name="keywords" content="{{ quiz_title }}، اختبار الأحاديث، الأربعين النووية، أسئلة الحديث">
+<meta name="robots" content="noindex, follow">
+{% endblock %}
+
+{% block content %}
+<div class="container container-narrow" style="padding-top: var(--space-2xl); padding-bottom: var(--space-3xl);">
+    
+    <!-- Quiz Header -->
+    <div class="fade-in" style="text-align: center; margin-bottom: var(--space-2xl);">
+        <a href="/quiz" style="display: inline-flex; align-items: center; gap: var(--space-xs); color: var(--color-text-secondary); text-decoration: none; margin-bottom: var(--space-lg);">
+            <span class="material-icons-outlined">arrow_forward</span>
+            العودة للاختبارات
+        </a>
+        
+        <h1 style="font-size: var(--font-size-3xl); font-weight: var(--font-weight-bold); color: var(--color-primary); margin-bottom: var(--space-md);">
+            {{ quiz_title }}
+        </h1>
+        
+        <div style="display: flex; justify-content: center; gap: var(--space-xl); flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: var(--space-xs);">
+                <span class="material-icons-outlined" style="color: var(--color-primary);">quiz</span>
+                <span style="color: var(--color-text-secondary);">{{ questions|length }} سؤال</span>
+            </div>
+            <div style="display: flex; align-items: center; margin-left: 7px; margin-right: 7px;gap: var(--space-xs);">
+                <span class="material-icons-outlined" style="color: var(--color-primary);">timer</span>
+                <span id="timer-display" style="color: var(--color-text-secondary);">{{ time_limit }}:00</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: var(--space-xs);">
+                <span class="material-icons-outlined" style="color: var(--color-primary);">score</span>
+                <span id="score-display" style="color: var(--color-text-secondary);">0 / {{ questions|length }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quiz Container -->
+    <div id="quiz-container" class="card fade-in">
+        <!-- Questions will be rendered by JavaScript -->
+    </div>
+
+    <!-- Hidden Data -->
+    <script id="quiz-data" type="application/json" data-time-limit="{{ time_limit }}">
+        {{ questions|tojson|safe }}
+    </script>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Quiz Logic
+class QuizApp {
+    constructor() {
+        this.currentQuestion = 0;
+        this.score = 0;
+        this.questions = [];
+        this.timeLeft = 0;
+        this.timer = null;
+        this.answered = false;
+        
+        this.init();
+    }
+    
+    init() {
+        // Load questions
+        const questionsData = document.getElementById('quiz-data');
+        if (!questionsData) {
+            console.error('Quiz data not found');
+            return;
+        }
+        
+        try {
+            this.questions = JSON.parse(questionsData.textContent);
+            this.timeLeft = parseInt(questionsData.dataset.timeLimit || 5) * 60;
+            
+            if (this.questions.length === 0) {
+                this.showError('لا توجد أسئلة متاحة');
+                return;
+            }
+            
+            this.start();
+        } catch (error) {
+            console.error('Error loading quiz:', error);
+            this.showError('خطأ في تحميل الاختبار');
+        }
+    }
+    
+    start() {
+        this.currentQuestion = 0;
+        this.score = 0;
+        this.renderQuestion();
+        this.startTimer();
+    }
+    
+    startTimer() {
+        this.updateTimerDisplay();
+        this.timer = setInterval(() => {
+            this.timeLeft--;
+            this.updateTimerDisplay();
+            
+            if (this.timeLeft <= 0) {
+                this.endQuiz();
+            }
+        }, 1000);
+    }
+    
+    updateTimerDisplay() {
+        const minutes = Math.floor(this.timeLeft / 60);
+        const seconds = this.timeLeft % 60;
+        const display = document.getElementById('timer-display');
+        if (display) {
+            display.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            
+            // Change color when time is running out
+            if (this.timeLeft < 60) {
+                display.style.color = '#F56565';
+            } else if (this.timeLeft < 180) {
+                display.style.color = '#F59E0B';
+            }
+        }
+    }
+    
+    updateScoreDisplay() {
+        const display = document.getElementById('score-display');
+        if (display) {
+            display.textContent = `${this.score} / ${this.questions.length}`;
+        }
+    }
+    
+    renderQuestion() {
+        const container = document.getElementById('quiz-container');
+        if (!container || !this.questions[this.currentQuestion]) return;
+        
+        this.answered = false;
+        const question = this.questions[this.currentQuestion];
+        const progress = ((this.currentQuestion + 1) / this.questions.length) * 100;
+        
+        container.innerHTML = `
+            <div class="fade-in">
+                <!-- Progress Bar -->
+                <div style="background: var(--color-border); height: 8px; border-radius: var(--radius-full); margin-bottom: var(--space-xl); overflow: hidden;">
+                    <div style="background: var(--color-primary); height: 100%; width: ${progress}%; transition: width 0.3s;"></div>
+                </div>
+                
+                <!-- Question Number -->
+                <div style="margin-bottom: var(--space-lg);">
+                    <span class="badge badge-primary">سؤال ${this.currentQuestion + 1} من ${this.questions.length}</span>
+                </div>
+                
+                <!-- Question Text -->
+                <h3 style="font-size: var(--font-size-2xl); margin-bottom: var(--space-xl); color: var(--color-text-primary); line-height: 1.6;">
+                    ${this.escapeHtml(question.question)}
+                </h3>
+                
+                <!-- Options -->
+                <div style="display: flex; flex-direction: column; gap: var(--space-md);">
+                    ${question.options.map((option, index) => `
+                        <button 
+                            class="btn btn-outline quiz-option" 
+                            data-index="${index}"
+                            style="justify-content: flex-start; text-align: right; padding: var(--space-lg); font-size: var(--font-size-base); font-weight: normal; white-space: normal; height: auto; min-height: 60px;"
+                        >
+                            <span style="background: var(--color-primary); color: white; width: 32px; height: 32px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-left: var(--space-md); flex-shrink: 0; font-weight: bold;">
+                                ${String.fromCharCode(65 + index)}
+                            </span>
+                            <span style="flex: 1;">${this.escapeHtml(option)}</span>
+                        </button>
+                    `).join('')}
+                </div>
+                
+                ${question.hint ? `
+                    <div style="margin-top: var(--space-xl); padding: var(--space-lg); background: var(--color-bg-hover); border-radius: var(--radius-md); border-right: 3px solid var(--color-primary);">
+                        <div style="display: flex; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-sm);">
+                            <span class="material-icons-outlined" style="font-size: 1.2rem; color: var(--color-primary);">lightbulb</span>
+                            <strong style="color: var(--color-primary);">تلميح:</strong>
+                        </div>
+                        <p style="color: var(--color-text-secondary);">${this.escapeHtml(question.hint)}</p>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+        
+        // Attach click listeners
+        container.querySelectorAll('.quiz-option').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                if (this.answered) return;
+                
+                const button = e.currentTarget;
+                const selectedIndex = parseInt(button.dataset.index);
+                this.checkAnswer(selectedIndex, question.correctAnswer, question.explanation);
+            });
+        });
+    }
+    
+    checkAnswer(selectedIndex, correctIndex, explanation) {
+        if (this.answered) return;
+        this.answered = true;
+        
+        const isCorrect = selectedIndex === correctIndex;
+        const buttons = document.querySelectorAll('.quiz-option');
+        
+        // Highlight answers
+        buttons.forEach((btn, index) => {
+            btn.disabled = true;
+            if (index === correctIndex) {
+                btn.style.borderColor = '#48BB78';
+                btn.style.background = 'rgba(72, 187, 120, 0.1)';
+            } else if (index === selectedIndex && !isCorrect) {
+                btn.style.borderColor = '#F56565';
+                btn.style.background = 'rgba(245, 101, 101, 0.1)';
+            }
+        });
+        
+        if (isCorrect) {
+            this.score++;
+            this.updateScoreDisplay();
+        }
+        
+        // Show explanation
+        if (explanation) {
+            const container = document.getElementById('quiz-container');
+            const explanationDiv = document.createElement('div');
+            explanationDiv.className = 'fade-in';
+            explanationDiv.style.cssText = 'margin-top: var(--space-xl); padding: var(--space-lg); background: var(--color-bg-hover); border-radius: var(--radius-md); border-right: 3px solid ' + (isCorrect ? '#48BB78' : '#F56565');
+            explanationDiv.innerHTML = `
+                <div style="display: flex; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-sm);">
+                    <span class="material-icons-outlined" style="color: ${isCorrect ? '#48BB78' : '#F56565'};">
+                        ${isCorrect ? 'check_circle' : 'cancel'}
+                    </span>
+                    <strong style="color: ${isCorrect ? '#48BB78' : '#F56565'};">
+                        ${isCorrect ? 'إجابة صحيحة! 🎉' : 'إجابة خاطئة'}
+                    </strong>
+                </div>
+                <p style="color: var(--color-text-secondary);">${this.escapeHtml(explanation)}</p>
+            `;
+            container.appendChild(explanationDiv);
+        }
+        
+        // Next button
+        setTimeout(() => {
+            const container = document.getElementById('quiz-container');
+            const nextBtn = document.createElement('button');
+            nextBtn.className = 'btn btn-primary fade-in';
+            nextBtn.style.cssText = 'width: 100%; margin-top: var(--space-xl);';
+            nextBtn.textContent = this.currentQuestion < this.questions.length - 1 ? 'السؤال التالي →' : 'إنهاء الاختبار';
+            nextBtn.addEventListener('click', () => {
+                this.currentQuestion++;
+                if (this.currentQuestion < this.questions.length) {
+                    this.renderQuestion();
+                } else {
+                    this.endQuiz();
+                }
+            });
+            container.appendChild(nextBtn);
+        }, 500);
+    }
+    
+    endQuiz() {
+        clearInterval(this.timer);
+        const percentage = Math.round((this.score / this.questions.length) * 100);
+        
+        // Save stats
+        this.saveStats(percentage);
+        
+        const container = document.getElementById('quiz-container');
+        if (container) {
+            container.innerHTML = `
+                <div class="fade-in-scale" style="text-align: center; padding: var(--space-3xl);">
+                    <div style="font-size: 5rem; margin-bottom: var(--space-lg);">
+                        ${percentage >= 80 ? '🎉' : percentage >= 60 ? '👍' : '💪'}
+                    </div>
+                    
+                    <h2 style="font-size: var(--font-size-4xl); margin-bottom: var(--space-xl); color: var(--color-primary);">
+                        ${percentage >= 80 ? 'ممتاز!' : percentage >= 60 ? 'جيد!' : 'حاول مرة أخرى!'}
+                    </h2>
+                    
+                    <div style="background: var(--color-bg-hover); padding: var(--space-2xl); border-radius: var(--radius-lg); margin-bottom: var(--space-xl);">
+                        <div style="font-size: var(--font-size-3xl); font-weight: var(--font-weight-bold); color: var(--color-primary); margin-bottom: var(--space-sm);">
+                            ${this.score} / ${this.questions.length}
+                        </div>
+                        <div style="font-size: var(--font-size-xl); color: var(--color-text-secondary);">
+                            النسبة: ${percentage}%
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: var(--space-md); justify-content: center; flex-wrap: wrap;">
+                        <a href="/quiz" class="btn btn-primary">اختبار جديد</a>
+                        <a href="/" class="btn btn-outline">العودة للرئيسية</a>
+                    </div>
+                </div>
+            `;
+        }
+    }
+    
+    saveStats(percentage) {
+        const stats = JSON.parse(localStorage.getItem('quizStats') || '{"completed": 0, "bestScore": 0}');
+        stats.completed = (stats.completed || 0) + 1;
+        stats.bestScore = Math.max(stats.bestScore || 0, percentage);
+        localStorage.setItem('quizStats', JSON.stringify(stats));
+    }
+    
+    showError(message) {
+        const container = document.getElementById('quiz-container');
+        if (container) {
+            container.innerHTML = `
+                <div style="text-align: center; padding: var(--space-3xl);">
+                    <span class="material-icons-outlined" style="font-size: 5rem; color: var(--color-text-secondary); opacity: 0.3;">error</span>
+                    <h2 style="margin-top: var(--space-lg); color: var(--color-text-primary);">${message}</h2>
+                    <a href="/quiz" class="btn btn-primary" style="margin-top: var(--space-xl);">العودة للاختبارات</a>
+                </div>
+            `;
+        }
+    }
+    
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+}
+
+// Initialize quiz when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    new QuizApp();
+});
+</script>
+{% endblock %}
