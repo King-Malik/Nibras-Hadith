@@ -719,9 +719,11 @@ class UserDataManager:
         }
 
     def update_last_reminder_sent(self, user_id: int, evening: bool = False) -> bool:
+        from datetime import timezone as dt_tz
+        now_utc = datetime.now(dt_tz.utc).isoformat()  # دائماً UTC مع timezone
         if evening:
-            return self._update_field(user_id, last_reminder_evening=datetime.now().isoformat())
-        return self._update_field(user_id, last_reminder_sent=datetime.now().isoformat())
+            return self._update_field(user_id, last_reminder_evening=now_utc)
+        return self._update_field(user_id, last_reminder_sent=now_utc)
 
     def get_all_users(self) -> List[Tuple[int, Dict[str, Any]]]:
         """إرجاع كل المستخدمين مع بياناتهم الكاملة"""
@@ -763,21 +765,18 @@ class UserDataManager:
         return self._update_field(user_id, banned=False)
 
     def get_all_users_with_reminders(self) -> List[Tuple[int, Dict[str, Any]]]:
-        users: List[Tuple[int, Dict[str, Any]]] = []
-        for path in self.data_dir.glob("user_*.json"):
-            try:
-                uid  = int(path.stem.split("_")[1])
-                data = self._load(uid)
-                if data.get("reminder_enabled"):
-                    users.append((uid, {
-                        "time":         data.get("reminder_time", DEFAULT_REMINDER_TIME),
-                        "time_evening": data.get("reminder_time_evening"),
-                        "timezone":     data.get("reminder_timezone", DEFAULT_TIMEZONE),
-                        "last_sent":    data.get("last_reminder_sent"),
-                        "last_evening": data.get("last_reminder_evening"),
-                    }))
-            except Exception as exc:
-                logger.error(f"خطأ في قراءة {path}: {exc}")
+        """يقرأ من Supabase أولاً، ثم الملفات احتياطياً"""
+        all_users = self.get_all_users()  # يقرأ من Supabase أو الملفات
+        users = []
+        for uid, data in all_users:
+            if data.get("reminder_enabled"):
+                users.append((uid, {
+                    "time":         data.get("reminder_time", DEFAULT_REMINDER_TIME),
+                    "time_evening": data.get("reminder_time_evening"),
+                    "timezone":     data.get("reminder_timezone", DEFAULT_TIMEZONE),
+                    "last_sent":    data.get("last_reminder_sent"),
+                    "last_evening": data.get("last_reminder_evening"),
+                }))
         return users
 
     # ── السلسلة اليومية ───────────────────────────────────────────
@@ -2818,6 +2817,46 @@ class BotHandlers:
 
 
     @admin_only
+    async def admin_test_reminder_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """🔔 /admin_test_reminder [user_id] — اختبار إرسال تذكير فوري"""
+        uid = update.effective_user.id
+        if context.args and context.args[0].isdigit():
+            uid = int(context.args[0])
+
+        data   = self.user_data._load(uid)
+        rem_on = data.get("reminder_enabled", False)
+        tz_str = data.get("reminder_timezone", DEFAULT_TIMEZONE)
+        time_s = data.get("reminder_time", DEFAULT_REMINDER_TIME)
+        last   = data.get("last_reminder_sent", "لم يُرسَل بعد")
+
+        status_text = (
+            f"🔔 *اختبار التذكير للمستخدم* `{uid}`\n\n"
+            f"⚙️ التذكير مفعّل: {'✅' if rem_on else '❌'}\n"
+            f"⏰ الوقت المضبوط: {time_s}\n"
+            f"🌍 المنطقة الزمنية: {tz_str}\n"
+            f"📅 آخر إرسال: {last}\n\n"
+        )
+
+        # إرسال تذكير تجريبي فوري
+        unread = self.user_data.get_unread_hadiths(uid, len(self.db))
+        hadith_id = random.choice(unread) if unread else random.randint(1, len(self.db))
+        hadith    = self.db.get_by_id(hadith_id)
+        if hadith:
+            try:
+                await context.bot.send_message(
+                    chat_id=uid,
+                    text=ReminderSystem.build_message(hadith, len(unread)),
+                    parse_mode=ParseMode.MARKDOWN,
+                )
+                status_text += "✅ *تم إرسال تذكير تجريبي بنجاح!*"
+            except Exception as e:
+                status_text += f"❌ فشل الإرسال: {e}"
+        else:
+            status_text += "❌ لم يُعثر على حديث"
+
+        await update.message.reply_text(status_text, parse_mode=ParseMode.MARKDOWN)
+
+    @admin_only
     async def admin_cache_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """📦 /admin_cache — إحصائيات الكاش وإعادة ضبطه"""
         global _hadith_cache, _cache_hits
@@ -4009,12 +4048,13 @@ async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 
 
 async def reminder_loop(bot, user_data_mgr, hadith_db) -> None:
-    """حلقة التذكير اليومي — تعمل في خلفية asyncio كل 60 ثانية بدون job_queue"""
+    """حلقة التذكير اليومي — تعمل في خلفية asyncio كل 60 ثانية"""
     logger.info("⏰ حلقة التذكير بدأت")
     while True:
         try:
-            await asyncio.sleep(60)
+            await asyncio.sleep(55)  # 55 ثانية لتغطية أي تأخير
             users = user_data_mgr.get_all_users_with_reminders()
+            logger.debug(f"⏰ التذكير: فحص {len(users)} مستخدم")
             # ✅ إصلاح: استخدام UTC timezone-aware بدل naive datetime
             from datetime import timezone as dt_timezone
             now = datetime.now(dt_timezone.utc)
@@ -4031,7 +4071,7 @@ async def reminder_loop(bot, user_data_mgr, hadith_db) -> None:
                     if rem_time:
                         rem_min = rem_time.hour * 60 + rem_time.minute
                         # ✅ إصلاح: توسيع النافذة من 2 إلى 3 دقائق لتفادي التفويت
-                        if abs(cur_min - rem_min) < 3 and ReminderSystem.should_send(settings.get("last_sent"), tz_str):
+                        if abs(cur_min - rem_min) < 5 and ReminderSystem.should_send(settings.get("last_sent"), tz_str):
                             unread    = user_data_mgr.get_unread_hadiths(user_id, len(hadith_db))
                             hadith_id = random.choice(unread) if unread else random.randint(1, len(hadith_db))
                             hadith    = hadith_db.get_by_id(hadith_id)
@@ -4051,7 +4091,7 @@ async def reminder_loop(bot, user_data_mgr, hadith_db) -> None:
                         if ev_time:
                             ev_min = ev_time.hour * 60 + ev_time.minute
                             # ✅ إصلاح: توسيع النافذة من 2 إلى 3 دقائق
-                            if abs(cur_min - ev_min) < 3 and ReminderSystem.should_send(settings.get("last_evening"), tz_str):
+                            if abs(cur_min - ev_min) < 5 and ReminderSystem.should_send(settings.get("last_evening"), tz_str):
                                 hadith = hadith_db.get_random()
                                 if hadith:
                                     await bot.send_message(
@@ -4119,7 +4159,8 @@ async def _run_bot() -> None:
         ("admin_inactive",   handlers.admin_inactive_command),
         ("admin_announce",   handlers.admin_announce_command),
         ("admin_maintenance",handlers.admin_maintenance_command),
-        ("admin_cache",      handlers.admin_cache_command),
+        ("admin_cache",          handlers.admin_cache_command),
+        ("admin_test_reminder",  handlers.admin_test_reminder_command),
     ]:
         app.add_handler(CommandHandler(cmd, fn))
 
