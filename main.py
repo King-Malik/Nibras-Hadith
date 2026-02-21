@@ -364,15 +364,27 @@ class ContactForm(BaseModel):
 # ============================================
 @app.get("/")
 @limiter.limit(f"{settings.rate_limit_per_minute}/minute")
-async def home(request: Request, q: Optional[str] = None):
+async def home(request: Request, q: Optional[str] = None, narrator: Optional[str] = None):
     try:
         hadiths = search_hadiths(q) if q else HADITHS_DATA
+        # فلتر الراوي
+        if narrator:
+            hadiths = [h for h in hadiths if narrator in h.get("narrator", "")]
+        # قائمة الرواة مرتبة حسب رقم الحديث (أول ظهور)
+        seen = {}
+        for h in HADITHS_DATA:
+            n = h.get("narrator", "")
+            if n and n not in seen:
+                seen[n] = h["id"]
+        narrators = sorted(seen.keys(), key=lambda x: seen[x])
         return templates.TemplateResponse("index.html", {
             "request": request,
             "hadiths": hadiths,
             "search_query": q or "",
             "total_hadiths": len(HADITHS_DATA),
             "settings": settings,
+            "narrators": narrators,
+            "active_narrator": narrator or "",
         })
     except Exception as e:
         logger.error(f"❌ خطأ في الصفحة الرئيسية: {e}\n{traceback.format_exc()}")

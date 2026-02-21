@@ -459,6 +459,111 @@
             grid-template-columns: 1fr;
         }
     }
+
+    /* ── شريط الرواة ── */
+    .narrators-strip-wrapper {
+        position: relative;
+        padding: 0 clamp(16px, 4vw, 32px);
+        margin-bottom: clamp(24px, 5vw, 40px);
+    }
+
+    .narrators-strip-label {
+        font-size: var(--font-size-sm);
+        color: var(--color-text-secondary);
+        font-weight: 600;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding-right: 4px;
+    }
+
+    .narrators-strip {
+        display: flex;
+        gap: 10px;
+        overflow-x: auto;
+        padding-bottom: 12px;
+        scroll-behavior: smooth;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+        scrollbar-color: var(--color-primary) transparent;
+    }
+
+    .narrators-strip::-webkit-scrollbar {
+        height: 4px;
+    }
+    .narrators-strip::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .narrators-strip::-webkit-scrollbar-thumb {
+        background: var(--color-primary);
+        border-radius: var(--radius-full);
+    }
+
+    .narrator-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        white-space: nowrap;
+        padding: 9px 18px;
+        border-radius: var(--radius-md);
+        border: 1.5px solid var(--color-border);
+        background: var(--color-bg-card);
+        color: var(--color-text-primary);
+        font-family: var(--font-family);
+        font-size: clamp(13px, 2.5vw, 14px);
+        font-weight: 500;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        flex-shrink: 0;
+        box-shadow: 0 1px 3px var(--color-shadow);
+    }
+
+    .narrator-btn:hover {
+        border-color: var(--color-primary);
+        color: var(--color-primary);
+        background: var(--color-primary-soft);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+    }
+
+    .narrator-btn.active {
+        background: var(--color-primary);
+        border-color: var(--color-primary);
+        color: #ffffff;
+        box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+        transform: translateY(-2px);
+    }
+
+    .narrator-btn .narrator-icon {
+        font-size: 16px;
+        opacity: 0.85;
+    }
+
+    .narrator-btn-all {
+        border-color: var(--color-primary);
+        color: var(--color-primary);
+        font-weight: 600;
+    }
+
+    .narrator-btn-all.active {
+        background: var(--color-primary);
+        color: #ffffff;
+    }
+
+    /* fade edges للإشارة للسكرول */
+    .narrators-strip-wrapper::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 30px;
+        bottom: 12px;
+        width: 32px;
+        background: linear-gradient(to right, var(--color-bg-main), transparent);
+        pointer-events: none;
+    }
+
 </style>
 {% endblock %}
 
@@ -490,6 +595,37 @@
              data-ad-format="auto"
              data-full-width-responsive="true"></ins>
         <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    </div>
+</div>
+{% endif %}
+
+
+<!-- شريط الرواة -->
+{% if narrators %}
+<div class="narrators-strip-wrapper">
+    <p class="narrators-strip-label">
+        <span class="material-icons-outlined" style="font-size:16px;">person</span>
+        تصفح حسب الراوي
+    </p>
+    <div class="narrators-strip" id="narratorsStrip">
+
+        <!-- زر الكل -->
+        <a href="/"
+           class="narrator-btn narrator-btn-all {% if not active_narrator %}active{% endif %}">
+            <span class="material-icons-outlined narrator-icon">grid_view</span>
+            جميع الأحاديث
+        </a>
+
+        <!-- أزرار الرواة -->
+        {% for n in narrators %}
+        <a href="/?narrator={{ n | urlencode }}"
+           class="narrator-btn {% if active_narrator == n %}active{% endif %}"
+           title="{{ n }}">
+            <span class="material-icons-outlined narrator-icon">person_outline</span>
+            {{ n }}
+        </a>
+        {% endfor %}
+
     </div>
 </div>
 {% endif %}
