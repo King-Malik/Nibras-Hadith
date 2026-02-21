@@ -1070,11 +1070,10 @@ async def contact_page(request: Request):
 @app.post("/api/contact")
 @limiter.limit("5/minute")
 async def contact_api(request: Request, form: ContactForm):
-    """معالجة نموذج التواصل - إرسال بريد إلكتروني حقيقي"""
+    """معالجة نموذج التواصل - إرسال بريد إلكتروني عبر Resend"""
     try:
         logger.info(f"📩 رسالة من {form.name} ({form.email}) - {form.subject}")
-        
-        # إرسال البريد الإلكتروني إذا كانت الخدمة متاحة
+
         if email_service and settings.contact_email_to:
             success = email_service.send_contact_email(
                 to_email=settings.contact_email_to,
@@ -1083,29 +1082,23 @@ async def contact_api(request: Request, form: ContactForm):
                 subject=form.subject,
                 message=form.message
             )
-            
+
             if success:
                 return api_success(
-                    data=None, 
-                    message="تم إرسال رسالتك بنجاح! سنتواصل معك قريباً إن شاء الله"
+                    data=None,
+                    message="تم إرسال رسالتك بنجاح! سنتواصل معك قريباً إن شاء الله 🌿"
                 )
             else:
-                # فشل الإرسال لكن نسجل البيانات
-                logger.error(f"فشل إرسال البريد لكن تم تسجيل الرسالة: {form.name}")
-                return api_success(
-                    data=None,
-                    message="تم استلام رسالتك، شكراً لتواصلك"
-                )
+                # Resend فشل — أعد خطأ حقيقي ليفتح الـ frontend mailto fallback
+                logger.error(f"❌ فشل إرسال بريد Resend لـ: {form.name} ({form.email})")
+                return api_error(503, "خدمة البريد غير متاحة حالياً، يرجى المحاولة لاحقاً")
         else:
-            # الخدمة غير متاحة - على الأقل نسجل الرسالة
-            logger.warning("⚠️ خدمة البريد غير متاحة - الرسالة لم تُرسل")
-            return api_success(
-                data=None,
-                message="تم تسجيل رسالتك بنجاح"
-            )
-            
+            # خدمة البريد غير مُهيأة
+            logger.warning("⚠️ RESEND_API_KEY أو CONTACT_EMAIL_TO غير مُعيَّن")
+            return api_error(503, "خدمة البريد غير مُهيأة")
+
     except Exception as e:
-        logger.error(f"❌ خطأ في معالجة الاتصال: {e}")
+        logger.error(f"❌ خطأ في معالجة التواصل: {e}")
         return api_error(500, "خطأ داخلي، يرجى المحاولة لاحقاً")
 
 

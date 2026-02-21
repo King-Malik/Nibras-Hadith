@@ -390,9 +390,16 @@ async function sendMessage(e) {
     const subject = document.getElementById('c-subject').value;
     const message = document.getElementById('c-message').value.trim();
 
-    // تحقق بسيط
+    // تحقق من الحقول
     if (!name || !email || !subject || !message) {
         toastManager.show('يرجى تعبئة جميع الحقول المطلوبة', 'error');
+        return;
+    }
+
+    // تحقق من صيغة البريد
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        toastManager.show('يرجى إدخال بريد إلكتروني صحيح', 'error');
         return;
     }
 
@@ -401,8 +408,7 @@ async function sendMessage(e) {
         return;
     }
 
-    // تغيير حالة الزر
-    const btn = document.getElementById('submit-btn');
+    const btn     = document.getElementById('submit-btn');
     const btnIcon = document.getElementById('submit-icon');
     const btnText = document.getElementById('submit-text');
     btn.disabled = true;
@@ -410,38 +416,39 @@ async function sendMessage(e) {
     btnText.textContent = 'جارٍ الإرسال...';
 
     try {
-        // إرسال عبر mailto كـ fallback (يفتح تطبيق الإيميل)
-        // في المستقبل يمكن استبداله بـ API حقيقي
-        const mailtoBody = encodeURIComponent(
-            `الاسم: ${name}\nالإيميل: ${email}\nالموضوع: ${subject}\n\nالرسالة:\n${message}`
-        );
-        const mailtoLink = `mailto:Nibras.help@gmail.com?subject=${encodeURIComponent('رسالة من ' + name + ' - ' + subject)}&body=${mailtoBody}`;
+        const res = await fetch('/api/contact', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, email, subject, message })
+        });
 
-        // محاولة الإرسال عبر API أولاً
-        let sent = false;
-        try {
-            const res = await fetch('/api/contact', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, email, subject, message })
-            });
-            if (res.ok) sent = true;
-        } catch {}
+        const data = await res.json().catch(() => ({}));
 
-        // إذا لم يوجد API، افتح mailto
-        if (!sent) {
-            window.location.href = mailtoLink;
-        }
-
-        // إظهار رسالة النجاح
-        setTimeout(() => {
+        if (res.ok) {
+            // نجاح: إخفاء النموذج وعرض بطاقة النجاح
             document.getElementById('form-card').style.display = 'none';
             document.getElementById('success-card').classList.add('show');
             window.scrollTo({ top: 0, behavior: 'smooth' });
-        }, sent ? 500 : 800);
+        } else {
+            // فشل من الخادم
+            const errMsg = data?.detail || data?.message || 'فشل إرسال الرسالة، يرجى المحاولة لاحقاً';
+            toastManager.show(errMsg, 'error');
+            btn.disabled = false;
+            btnIcon.textContent = 'send';
+            btnText.textContent = 'إرسال الرسالة';
+        }
 
     } catch (err) {
-        toastManager.show('حدث خطأ، يرجى المحاولة مجدداً', 'error');
+        // خطأ شبكة - نقدم mailto كـ fallback
+        console.error('خطأ في إرسال النموذج:', err);
+        const mailtoBody = encodeURIComponent(
+            `الاسم: ${name}\nالإيميل: ${email}\nالموضوع: ${subject}\n\nالرسالة:\n${message}`
+        );
+        const mailtoLink = `mailto:nibras.help@gmail.com?subject=${encodeURIComponent('[نبراس] ' + subject)}&body=${mailtoBody}`;
+        
+        toastManager.show('مشكلة في الاتصال - سيتم فتح تطبيق البريد', 'warning');
+        setTimeout(() => { window.open(mailtoLink, '_blank'); }, 1000);
+        
         btn.disabled = false;
         btnIcon.textContent = 'send';
         btnText.textContent = 'إرسال الرسالة';
