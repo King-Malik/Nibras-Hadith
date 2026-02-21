@@ -655,38 +655,41 @@
 
         <!-- تصدير / استيراد / مسح -->
         <div class="settings-card">
+            <!-- تصدير -->
             <div class="settings-row">
                 <div class="settings-icon"><span class="material-icons-outlined">download</span></div>
                 <div class="settings-text">
                     <div class="settings-label">تصدير البيانات</div>
-                    <div class="settings-sub">حفظ جميع البيانات والإحصائيات</div>
+                    <div class="settings-sub" id="export-sub">جارٍ الحساب...</div>
                 </div>
-                <button class="login-btn" onclick="exportData()" style="font-size:12px;padding:7px 14px;">
+                <button class="login-btn" onclick="showExportPreview()" style="font-size:12px;padding:7px 14px;">
                     <span class="material-icons-outlined" style="font-size:15px">download</span>
                     تصدير
                 </button>
             </div>
+            <!-- استيراد -->
             <div class="settings-row">
                 <div class="settings-icon"><span class="material-icons-outlined">upload</span></div>
                 <div class="settings-text">
                     <div class="settings-label">استيراد البيانات</div>
-                    <div class="settings-sub">استعادة البيانات من ملف سابق</div>
+                    <div class="settings-sub">استعادة بياناتك من ملف نبراس (.json)</div>
                 </div>
                 <button class="login-btn" onclick="document.getElementById('import-file').click()" style="font-size:12px;padding:7px 14px;">
                     <span class="material-icons-outlined" style="font-size:15px">upload</span>
                     استيراد
                 </button>
-                <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+                <input type="file" id="import-file" accept=".json" style="display:none" onchange="handleImportFile(event)">
             </div>
+            <!-- مسح -->
             <div class="settings-row">
                 <div class="settings-icon" style="background:rgba(239,68,68,0.1)">
                     <span class="material-icons-outlined" style="color:#ef4444">delete_forever</span>
                 </div>
                 <div class="settings-text">
                     <div class="settings-label" style="color:#ef4444">مسح جميع البيانات</div>
-                    <div class="settings-sub">حذف المحفوظات والإعدادات</div>
+                    <div class="settings-sub">حذف المحفوظات والاختبارات والإعدادات</div>
                 </div>
-                <button class="danger-btn" onclick="clearAll()">
+                <button class="danger-btn" onclick="showClearConfirm()">
                     <span class="material-icons-outlined" style="font-size:15px">warning</span>
                     مسح
                 </button>
@@ -694,7 +697,84 @@
         </div>
     </div>
 
-</div>
+    <!-- ── مودال التصدير ────────────────────────────────── -->
+    <div id="modal-export" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:16px;">
+        <div style="background:var(--color-bg-card);border:1px solid var(--color-border);border-radius:var(--radius-lg);max-width:460px;width:100%;max-height:90vh;overflow-y:auto;animation:slideDown 0.25s ease-out;">
+            <div style="padding:24px 24px 0;display:flex;align-items:center;justify-content:space-between;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <span style="font-size:26px;">📦</span>
+                    <div>
+                        <div style="font-size:16px;font-weight:700;color:var(--color-text-primary);">تصدير بياناتك</div>
+                        <div style="font-size:12px;color:var(--color-text-secondary);">ملخص ما سيتم تصديره</div>
+                    </div>
+                </div>
+                <button onclick="closeModal('modal-export')" style="background:none;border:none;cursor:pointer;color:var(--color-text-secondary);padding:4px;border-radius:6px;">
+                    <span class="material-icons-outlined">close</span>
+                </button>
+            </div>
+            <div id="export-summary" style="padding:20px 24px;"></div>
+            <div style="padding:0 24px 24px;display:flex;gap:10px;">
+                <button class="login-btn" onclick="doExport()" style="flex:1;justify-content:center;">
+                    <span class="material-icons-outlined" style="font-size:16px;">download</span>
+                    تنزيل الملف
+                </button>
+                <button onclick="closeModal('modal-export')" style="flex:1;padding:10px;background:var(--color-bg-hover);border:1px solid var(--color-border);border-radius:var(--radius-md);cursor:pointer;font-family:var(--font-family);font-size:14px;color:var(--color-text-secondary);">
+                    إلغاء
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── مودال الاستيراد ──────────────────────────────── -->
+    <div id="modal-import" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:16px;">
+        <div style="background:var(--color-bg-card);border:1px solid var(--color-border);border-radius:var(--radius-lg);max-width:460px;width:100%;max-height:90vh;overflow-y:auto;animation:slideDown 0.25s ease-out;">
+            <div style="padding:24px 24px 0;display:flex;align-items:center;justify-content:space-between;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <span style="font-size:26px;">📥</span>
+                    <div>
+                        <div style="font-size:16px;font-weight:700;color:var(--color-text-primary);">استيراد البيانات</div>
+                        <div style="font-size:12px;color:var(--color-text-secondary);">راجع ما سيتم استيراده</div>
+                    </div>
+                </div>
+                <button onclick="closeModal('modal-import')" style="background:none;border:none;cursor:pointer;color:var(--color-text-secondary);padding:4px;border-radius:6px;">
+                    <span class="material-icons-outlined">close</span>
+                </button>
+            </div>
+            <div id="import-summary" style="padding:20px 24px;"></div>
+            <div id="import-conflict-box" style="display:none;margin:0 24px 16px;padding:12px 14px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:var(--radius-md);">
+                <div style="font-size:12px;font-weight:700;color:#f59e0b;margin-bottom:4px;">⚠️ تعارض في البيانات</div>
+                <div id="import-conflict-text" style="font-size:12px;color:var(--color-text-secondary);line-height:1.5;"></div>
+            </div>
+            <div style="padding:0 24px 12px;display:flex;gap:10px;">
+                <button class="login-btn" onclick="doImport('merge')" style="flex:1;justify-content:center;background:#10b981;">
+                    <span class="material-icons-outlined" style="font-size:15px;">merge</span>
+                    دمج مع الموجود
+                </button>
+                <button class="login-btn" onclick="doImport('replace')" style="flex:1;justify-content:center;background:#f59e0b;">
+                    <span class="material-icons-outlined" style="font-size:15px;">swap_horiz</span>
+                    استبدال الكل
+                </button>
+            </div>
+            <div style="padding:0 24px 20px;text-align:center;">
+                <button onclick="closeModal('modal-import')" style="background:none;border:none;cursor:pointer;font-family:var(--font-family);font-size:13px;color:var(--color-text-secondary);">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── مودال تأكيد المسح ─────────────────────────────── -->
+    <div id="modal-clear" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:16px;">
+        <div style="background:var(--color-bg-card);border:1px solid var(--color-border);border-radius:var(--radius-lg);max-width:380px;width:100%;animation:slideDown 0.25s ease-out;">
+            <div style="padding:32px 24px;text-align:center;">
+                <div style="font-size:48px;margin-bottom:16px;">⚠️</div>
+                <div style="font-size:17px;font-weight:700;color:var(--color-text-primary);margin-bottom:8px;">مسح جميع البيانات؟</div>
+                <div style="font-size:13px;color:var(--color-text-secondary);margin-bottom:24px;line-height:1.6;">سيتم حذف المحفوظات وسجل الاختبارات والإعدادات. لا يمكن التراجع عن هذا الإجراء.</div>
+                <div style="display:flex;gap:10px;">
+                    <button onclick="doClearAll()" style="flex:1;padding:12px;background:#ef4444;color:white;border:none;border-radius:var(--radius-md);cursor:pointer;font-family:var(--font-family);font-size:14px;font-weight:600;">نعم، امسح الكل</button>
+                    <button onclick="closeModal('modal-clear')" style="flex:1;padding:12px;background:var(--color-bg-hover);border:1px solid var(--color-border);border-radius:var(--radius-md);cursor:pointer;font-family:var(--font-family);font-size:14px;color:var(--color-text-secondary);">إلغاء</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
 <script>
 const SAVED_KEY = 'hadith-saved';
@@ -911,84 +991,295 @@ function toggleNotifications(checked) {
     }
 }
 
-function exportData() {
+// ════════════════════════════════════════════════
+// نظام التصدير والاستيراد المحدّث
+// ════════════════════════════════════════════════
+
+// ── جمع كل البيانات من localStorage ──
+function collectAllData() {
     const prefs = getPrefs();
     const saved = getSaved();
-    
-    // جمع كل البيانات من localStorage
-    const allData = {
-        version: '1.0',
+    const quizResults = (() => { try { return JSON.parse(localStorage.getItem('quiz-results') || '[]'); } catch { return []; } })();
+    const quizStats  = (() => { try { return JSON.parse(localStorage.getItem('quizStats') || '{}'); } catch { return {}; } })();
+    const theme = localStorage.getItem('hadith-app-theme') || 'light';
+
+    // إحصائيات الاختبارات
+    const quizByType = {};
+    quizResults.forEach(r => {
+        const type = r.type || 'unknown';
+        if (!quizByType[type]) quizByType[type] = { count: 0, bestScore: 0, totalScore: 0 };
+        quizByType[type].count++;
+        quizByType[type].bestScore = Math.max(quizByType[type].bestScore, r.score || 0);
+        quizByType[type].totalScore += r.score || 0;
+    });
+
+    return {
+        version: '2.0',
+        app: 'نبراس - الأربعون النووية',
         exportedAt: new Date().toISOString(),
-        saved: saved,
-        prefs: prefs,
-        readIds: prefs.readIds || [],
-        quizScores: prefs.quizScores || [],
-        activeDays: prefs.activeDays || [],
-        theme: localStorage.getItem('hadith-app-theme') || 'light',
-        totalStats: {
-            saved: saved.length,
-            read: (prefs.readIds || []).length,
-            quiz: prefs.quizScore || 0,
-            streak: calcStreak(prefs)
+        exportedAtHuman: new Date().toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+        data: {
+            saved,
+            prefs,
+            quizResults,
+            quizStats,
+            theme,
+        },
+        summary: {
+            savedCount:    saved.length,
+            readCount:     (prefs.readIds || []).length,
+            quizCount:     quizResults.length,
+            bestQuizScore: quizStats.bestScore || 0,
+            streak:        calcStreak(prefs),
+            quizByType,
         }
     };
-    
-    const blob = new Blob([JSON.stringify(allData, null, 2)], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    const timestamp = new Date().toISOString().split('T')[0];
-    a.download = `نبراس-بيانات-${timestamp}.json`;
-    a.click();
-    toastManager.show('تم تصدير جميع البيانات بنجاح', 'success');
 }
 
-function importData(event) {
+// ── تحديث نص "عدد العناصر" في صف التصدير ──
+function updateExportSub() {
+    const data = collectAllData();
+    const s = data.summary;
+    document.getElementById('export-sub').textContent =
+        `${s.savedCount} محفوظ · ${s.readCount} مقروء · ${s.quizCount} اختبار`;
+}
+
+// ── عرض مودال التصدير مع ملخص ──
+function showExportPreview() {
+    const data = collectAllData();
+    const s = data.summary;
+
+    const typeLabels = {
+        narrator: 'من الراوي؟', complete: 'أكمل الحديث', 'which-hadith': 'من أي حديث؟',
+        vocabulary: 'معاني المفردات', benefit: 'فوائد الأحاديث', topic: 'تصنيف الأحاديث',
+        source: 'مصادر الأحاديث', 'narrator-tribe': 'قبائل الرواة', 'narrator-died': 'تاريخ وفاة الراوي',
+        'narrations-count': 'عدد الروايات', speed: 'السباق ضد الوقت', 'random-20': 'الاختبار الشامل', 'first-10': 'العشرة الأولى',
+    };
+
+    const quizRows = Object.entries(s.quizByType).map(([type, info]) => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--color-border);">
+            <span style="font-size:12px;color:var(--color-text-secondary);">${typeLabels[type] || type}</span>
+            <span style="font-size:12px;font-weight:600;color:var(--color-text-primary);">${info.count} اختبار · أفضل: ${info.bestScore}</span>
+        </div>`).join('') || '<div style="font-size:12px;color:var(--color-text-secondary);text-align:center;padding:8px 0;">لا توجد اختبارات بعد</div>';
+
+    document.getElementById('export-summary').innerHTML = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+            ${[
+                ['bookmark', 'الأحاديث المحفوظة', s.savedCount, '#10b981'],
+                ['menu_book', 'الأحاديث المقروءة', s.readCount, '#6366f1'],
+                ['quiz', 'الاختبارات المُجراة', s.quizCount, '#f59e0b'],
+                ['local_fire_department', 'أيام متتالية', s.streak, '#ef4444'],
+            ].map(([icon, label, val, color]) => `
+                <div style="background:var(--color-bg-hover);border-radius:10px;padding:12px;text-align:center;">
+                    <span class="material-icons-outlined" style="font-size:20px;color:${color};">${icon}</span>
+                    <div style="font-size:20px;font-weight:700;color:var(--color-text-primary);margin:4px 0;">${val}</div>
+                    <div style="font-size:11px;color:var(--color-text-secondary);">${label}</div>
+                </div>`).join('')}
+        </div>
+        <div style="background:var(--color-bg-hover);border-radius:10px;padding:14px;margin-bottom:4px;">
+            <div style="font-size:12px;font-weight:700;color:var(--color-text-primary);margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+                <span class="material-icons-outlined" style="font-size:15px;color:var(--color-primary);">analytics</span>
+                تفاصيل الاختبارات حسب النوع
+            </div>
+            ${quizRows}
+        </div>`;
+
+    openModal('modal-export');
+}
+
+// ── تنفيذ التصدير الفعلي ──
+let _exportData = null;
+function doExport() {
+    if (!_exportData) _exportData = collectAllData();
+    const blob = new Blob([JSON.stringify(_exportData, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    const date = new Date().toISOString().split('T')[0];
+    a.download = `نبراس-${date}.json`;
+    a.click();
+    closeModal('modal-export');
+    toastManager.show('✅ تم تصدير بياناتك بنجاح', 'success');
+    _exportData = null;
+}
+
+// ── قراءة ملف الاستيراد وعرض مودال المعاينة ──
+let _importParsed = null;
+function handleImportFile(event) {
     const file = event.target.files[0];
     if (!file) return;
-    
+    event.target.value = '';
+
     const reader = new FileReader();
     reader.onload = function(e) {
         try {
-            const data = JSON.parse(e.target.result);
-            
-            // التحقق من صحة البيانات
-            if (!data || typeof data !== 'object') {
-                throw new Error('ملف غير صالح');
-            }
-            
-            // استعادة البيانات
-            if (data.saved) {
-                localStorage.setItem(SAVED_KEY, JSON.stringify(data.saved));
-            }
-            
-            if (data.prefs) {
-                localStorage.setItem(PREFS_KEY, JSON.stringify(data.prefs));
-            }
-            
-            if (data.theme) {
-                localStorage.setItem('hadith-app-theme', data.theme);
-                document.documentElement.classList.toggle('dark', data.theme === 'dark');
-            }
-            
-            toastManager.show('تم استيراد البيانات بنجاح', 'success');
-            setTimeout(() => location.reload(), 1500);
-            
-        } catch (error) {
-            console.error('خطأ في استيراد البيانات:', error);
-            toastManager.show('فشل استيراد البيانات. تأكد من صحة الملف.', 'error');
+            const raw = JSON.parse(e.target.result);
+            if (!raw || typeof raw !== 'object') throw new Error('صيغة غير صالحة');
+
+            // دعم كلا الإصدارين v1 و v2
+            const isV2 = raw.version === '2.0' && raw.data;
+            const incoming = isV2 ? raw.data : raw;
+
+            _importParsed = {
+                saved:       Array.isArray(incoming.saved) ? incoming.saved : [],
+                prefs:       (incoming.prefs && typeof incoming.prefs === 'object') ? incoming.prefs : {},
+                quizResults: Array.isArray(incoming.quizResults) ? incoming.quizResults : (incoming.quizScores || []),
+                quizStats:   (incoming.quizStats && typeof incoming.quizStats === 'object') ? incoming.quizStats : {},
+                theme:       incoming.theme || null,
+                exportedAt:  raw.exportedAt || raw.exportedAtHuman || null,
+                version:     raw.version || '1.0',
+            };
+
+            _showImportPreview(_importParsed, raw.summary || null);
+            openModal('modal-import');
+        } catch(err) {
+            console.error(err);
+            toastManager.show('❌ فشل قراءة الملف. تأكد أنه ملف نبراس صالح.', 'error');
         }
     };
-    
     reader.readAsText(file);
-    event.target.value = ''; // إعادة تعيين input
 }
 
-function clearAll() {
-    if (!confirm('هل أنت متأكد من مسح جميع البيانات؟')) return;
+function _showImportPreview(d, summary) {
+    const existing = collectAllData();
+    const conflicts = [];
+
+    if (d.saved.length > 0 && existing.data.saved.length > 0) {
+        const existingIds = new Set(existing.data.saved.map(h => h.id));
+        const overlap = d.saved.filter(h => existingIds.has(h.id)).length;
+        if (overlap > 0) conflicts.push(`${overlap} حديث محفوظ موجود بالفعل`);
+    }
+    if (d.quizResults.length > 0 && existing.data.quizResults.length > 0) {
+        conflicts.push(`لديك ${existing.data.quizResults.length} اختبار مسجّل`);
+    }
+
+    const exportDate = d.exportedAt
+        ? new Date(d.exportedAt).toLocaleDateString('ar-SA', { year:'numeric', month:'long', day:'numeric' })
+        : 'غير محدد';
+
+    document.getElementById('import-summary').innerHTML = `
+        <div style="background:var(--color-bg-hover);border-radius:10px;padding:14px;margin-bottom:12px;">
+            <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:4px;">📅 تاريخ التصدير: ${exportDate} · الإصدار ${d.version}</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px;">
+            ${[
+                ['bookmark', 'محفوظات', d.saved.length, '#10b981'],
+                ['menu_book', 'أيام نشاط', (d.prefs.activeDays||[]).length, '#6366f1'],
+                ['quiz', 'اختبارات', d.quizResults.length, '#f59e0b'],
+                ['emoji_events', 'أفضل نتيجة', d.quizStats.bestScore || 0, '#ef4444'],
+            ].map(([icon, label, val, color]) => `
+                <div style="background:var(--color-bg-card);border:1px solid var(--color-border);border-radius:10px;padding:10px;text-align:center;">
+                    <span class="material-icons-outlined" style="font-size:18px;color:${color};">${icon}</span>
+                    <div style="font-size:18px;font-weight:700;color:var(--color-text-primary);margin:3px 0;">${val}</div>
+                    <div style="font-size:11px;color:var(--color-text-secondary);">${label}</div>
+                </div>`).join('')}
+        </div>`;
+
+    const conflictBox = document.getElementById('import-conflict-box');
+    if (conflicts.length > 0) {
+        conflictBox.style.display = 'block';
+        document.getElementById('import-conflict-text').textContent =
+            'تعارضات محتملة: ' + conflicts.join('، ') + '. اختر "دمج" لإضافة البيانات الجديدة دون حذف الموجودة، أو "استبدال" لتجاوز كل شيء.';
+    } else {
+        conflictBox.style.display = 'none';
+    }
+}
+
+// ── تنفيذ الاستيراد ──
+function doImport(mode) {
+    if (!_importParsed) return;
+    const d = _importParsed;
+
+    try {
+        if (mode === 'merge') {
+            // دمج المحفوظات
+            const existingSaved = getSaved();
+            const existingIds = new Set(existingSaved.map(h => h.id));
+            const merged = [...existingSaved, ...d.saved.filter(h => !existingIds.has(h.id))];
+            localStorage.setItem(SAVED_KEY, JSON.stringify(merged));
+
+            // دمج نتائج الاختبارات
+            const existingResults = (() => { try { return JSON.parse(localStorage.getItem('quiz-results') || '[]'); } catch { return []; } })();
+            const mergedResults = [...existingResults, ...d.quizResults].slice(-100);
+            localStorage.setItem('quiz-results', JSON.stringify(mergedResults));
+
+            // دمج الإعدادات (نحتفظ بالحالي إذا وُجد)
+            const existingPrefs = getPrefs();
+            const mergedPrefs = { ...d.prefs, ...existingPrefs };
+            // دمج readIds
+            const readSet = new Set([...(existingPrefs.readIds || []), ...(d.prefs.readIds || [])]);
+            mergedPrefs.readIds = [...readSet];
+            // دمج activeDays
+            const daysSet = new Set([...(existingPrefs.activeDays || []), ...(d.prefs.activeDays || [])]);
+            mergedPrefs.activeDays = [...daysSet];
+            localStorage.setItem(PREFS_KEY, JSON.stringify(mergedPrefs));
+
+            // دمج إحصائيات الاختبار
+            const existingStats = (() => { try { return JSON.parse(localStorage.getItem('quizStats') || '{}'); } catch { return {}; } })();
+            const mergedStats = {
+                completed: (existingStats.completed || 0) + (d.quizStats.completed || 0),
+                bestScore: Math.max(existingStats.bestScore || 0, d.quizStats.bestScore || 0),
+            };
+            localStorage.setItem('quizStats', JSON.stringify(mergedStats));
+
+        } else {
+            // استبدال الكل
+            localStorage.setItem(SAVED_KEY, JSON.stringify(d.saved));
+            localStorage.setItem(PREFS_KEY, JSON.stringify(d.prefs));
+            localStorage.setItem('quiz-results', JSON.stringify(d.quizResults));
+            localStorage.setItem('quizStats', JSON.stringify(d.quizStats));
+        }
+
+        if (d.theme) {
+            localStorage.setItem('hadith-app-theme', d.theme);
+        }
+
+        closeModal('modal-import');
+        toastManager.show(mode === 'merge' ? '✅ تم دمج البيانات بنجاح' : '✅ تم استيراد البيانات بنجاح', 'success');
+        setTimeout(() => location.reload(), 1400);
+    } catch(err) {
+        console.error(err);
+        toastManager.show('❌ حدث خطأ أثناء الاستيراد', 'error');
+    }
+    _importParsed = null;
+}
+
+// ── مودال التأكيد للمسح ──
+function showClearConfirm() {
+    openModal('modal-clear');
+}
+
+function doClearAll() {
     localStorage.removeItem(SAVED_KEY);
     localStorage.removeItem(PREFS_KEY);
+    localStorage.removeItem('quiz-results');
+    localStorage.removeItem('quizStats');
+    closeModal('modal-clear');
     toastManager.show('تم مسح جميع البيانات', 'warning');
     setTimeout(() => location.reload(), 1200);
 }
+
+// ── مساعدات المودال ──
+function openModal(id) {
+    const m = document.getElementById(id);
+    if (m) { m.style.display = 'flex'; document.body.style.overflow = 'hidden'; }
+}
+
+function closeModal(id) {
+    const m = document.getElementById(id);
+    if (m) { m.style.display = 'none'; document.body.style.overflow = ''; }
+}
+
+// إغلاق المودال عند الضغط خارجه
+document.addEventListener('click', function(e) {
+    ['modal-export','modal-import','modal-clear'].forEach(id => {
+        const m = document.getElementById(id);
+        if (m && e.target === m) closeModal(id);
+    });
+});
+
+// تحديث وصف التصدير عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(updateExportSub, 100);
+});
 </script>
 {% endblock %}

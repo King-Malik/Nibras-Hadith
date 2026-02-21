@@ -461,6 +461,32 @@
     }
 
     /* ── شريط الرواة ── */
+
+    /* ── شريط تقدم القراءة ─────────────────── */
+    .reading-progress-bar {
+        background: var(--color-bg-card);
+        border-bottom: 1px solid var(--color-border);
+        padding: 10px clamp(16px,4vw,48px);
+    }
+    .rp-inner {
+        max-width: 1200px; margin: 0 auto;
+        display: flex; align-items: center; gap: 12px;
+    }
+    .rp-icon { color: var(--color-primary); font-size: 20px; }
+    .rp-text { font-size: 13px; color: var(--color-text-secondary); white-space: nowrap; }
+    .rp-track {
+        flex: 1; height: 6px;
+        background: var(--color-bg-hover);
+        border-radius: 999px; overflow: hidden;
+    }
+    .rp-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--color-primary-light), var(--color-primary));
+        border-radius: 999px;
+        transition: width 0.6s ease;
+    }
+    .rp-pct { font-size: 12px; font-weight: 700; color: var(--color-primary); white-space: nowrap; }
+
     .narrators-strip-wrapper {
         position: relative;
         padding: 0 clamp(16px, 4vw, 32px);
@@ -599,6 +625,21 @@
 </div>
 {% endif %}
 
+
+
+<!-- شريط تقدم القراءة -->
+<div class="reading-progress-bar" id="reading-progress-bar" style="display:none">
+    <div class="rp-inner">
+        <span class="material-icons-outlined rp-icon">auto_stories</span>
+        <div class="rp-text">
+            <span id="rp-count">0</span> / {{ total_hadiths }} حديث مقروء
+        </div>
+        <div class="rp-track">
+            <div class="rp-fill" id="rp-fill" style="width:0%"></div>
+        </div>
+        <span class="rp-pct" id="rp-pct">0%</span>
+    </div>
+</div>
 
 <!-- شريط الرواة -->
 {% if narrators %}
@@ -772,5 +813,19 @@
         container.appendChild(toast);
         setTimeout(() => toast.remove(), 3000);
     }
+
+    // ── شريط تقدم القراءة ──────────────────────────────────
+    (function() {
+        try {
+            const saved = JSON.parse(localStorage.getItem('hadith-saved') || '[]');
+            if (saved.length === 0) return;
+            const total = {{ total_hadiths }};
+            const pct   = Math.round((saved.length / total) * 100);
+            document.getElementById('rp-count').textContent = saved.length;
+            document.getElementById('rp-fill').style.width  = pct + '%';
+            document.getElementById('rp-pct').textContent   = pct + '%';
+            document.getElementById('reading-progress-bar').style.display = 'block';
+        } catch(e) {}
+    })();
 </script>
 {% endblock %}

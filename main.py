@@ -119,13 +119,20 @@ def load_hadiths() -> List[Dict]:
                     source_text = source_raw or "الأربعون النووية"
 
                 data.append({
-                    "id":         hid,
-                    "title":      h.get("arabic_title", f"الحديث {hid}"),
-                    "narrator":   narrator_name,
-                    "text":       arabic_text,
-                    "source":     source_text,
-                    "vocabulary": h.get("vocabulary", []),
-                    "benefits":   h.get("benefits", []),
+                    "id":              hid,
+                    "title":           h.get("arabic_title", f"الحديث {hid}"),
+                    "narrator":        narrator_name,
+                    "_raw_narrator":   narrator_raw if isinstance(narrator_raw, dict) else {},
+                    "narrator_dict":   narrator_raw if isinstance(narrator_raw, dict) else {},
+                    "source_dict":     source_raw if isinstance(source_raw, dict) else {},
+                    "text":            arabic_text,
+                    "source":          source_text,
+                    "arabic_hadith_text_plain": h.get("arabic_hadith_text_plain", ""),
+                    "vocabulary":      h.get("vocabulary", []),
+                    "benefits":        h.get("benefits", []),
+                    "topics":          h.get("topics", {}),
+                    "hadith_type":     h.get("hadith_type", ""),
+                    "related_hadiths": h.get("related_hadiths", []),
                 })
             
             logger.info(f"✅ تم تحميل {len(data)} حديث بنجاح من {file_path}")
@@ -601,6 +608,7 @@ async def quiz_start_page(request: Request, type: str = "first-10"):
             "questions": questions,
             "quiz_title": quiz_title,
             "time_limit": time_limit,
+            "quiz_type": type,
             "settings": settings,
         })
     except Exception as e:
@@ -608,36 +616,412 @@ async def quiz_start_page(request: Request, type: str = "first-10"):
         raise HTTPException(status_code=500, detail="خطأ في تحميل الاختبار")
 
 
-def generate_quiz_questions(quiz_type: str):
-    """توليد أسئلة الاختبار"""
-    if quiz_type == "first-10":
-        hadiths = HADITHS_DATA[:min(10, len(HADITHS_DATA))]
-        quiz_title, time_limit = "اختبار الأحاديث العشرة الأولى", 5
-    elif quiz_type == "random-20":
-        hadiths = random.sample(HADITHS_DATA, min(20, len(HADITHS_DATA)))
-        quiz_title, time_limit = "اختبار عشوائي شامل", 10
-    else:
-        hadiths = HADITHS_DATA[:min(10, len(HADITHS_DATA))]
-        quiz_title, time_limit = "اختبار عام", 5
+def _get_narrator_field(hadith: Dict, field: str, default="") -> Any:
+    """استخراج حقل من بيانات الراوي بأمان"""
+    nar = hadith.get("narrator_dict") or hadith.get("_raw_narrator") or {}
+    if isinstance(nar, dict):
+        return nar.get(field, default)
+    return default
 
+def _get_source_books(hadith: Dict) -> list:
+    """استخراج قائمة كتب المصادر"""
+    src = hadith.get("source_dict") or {}
+    return src.get("books_arabic", [])
+
+def _build_options(correct: str, pool: list, count: int = 3) -> list:
+    """بناء 4 خيارات: 1 صحيح + 3 خاطئة"""
+    wrong_pool = [x for x in pool if x and x != correct]
+    wrong_pool = list(dict.fromkeys(wrong_pool))  # إزالة التكرار
+    if len(wrong_pool) < count:
+        return []
+    wrong = random.sample(wrong_pool, count)
+    options = wrong + [correct]
+    random.shuffle(options)
+    return options
+
+def _make_narrator_q(hadith: Dict, all_hadiths: List[Dict]) -> Optional[Dict]:
+    """من الراوي؟"""
+    correct = _get_narrator_field(hadith, "arabic", "")
+    if not correct:
+        return None
+    pool = [_get_narrator_field(h, "arabic") for h in all_hadiths]
+    options = _build_options(correct, pool)
+    if not options:
+        return None
+    return {
+        "question": f'من روى الحديث المعروف بـ «{hadith.get("title", "")}»؟',
+        "hadith_text": hadith.get("arabic_hadith_text_plain", ""),
+        "options": options,
+        "correctAnswer": options.index(correct),
+        "explanation": f'رواه {correct} رضي الله عنه. {_get_narrator_field(hadith, "bio_arabic", "")}',
+    }
+
+def _make_complete_q(hadith: Dict, all_hadiths: List[Dict]) -> Optional[Dict]:
+    """أكمل الحديث"""
+    text = hadith.get("arabic_hadith_text_plain", "").strip().strip('"').strip('«').strip('»')
+    if not text:
+        return None
+    words = text.split()
+    if len(words) < 8:
+        return None
+    # أخذ النصف الأول وترك النصف الثاني للإكمال
+    split = len(words) // 2
+    first_half = " ".join(words[:split])
+    correct = " ".join(words[split:split+4])  # 4 كلمات
+    # خيارات خاطئة من أحاديث أخرى
+    pool = []
+    for h in all_hadiths:
+        t = h.get("arabic_hadith_text_plain", "").strip().strip('"')
+        w = t.split()
+        if len(w) > split + 4 and h["id"] != hadith["id"]:
+            pool.append(" ".join(w[split:split+4]))
+    options = _build_options(correct, pool)
+    if not options:
+        return None
+    return {
+        "question": f'أكمل الحديث: «{first_half} ...»',
+        "options": options,
+        "correctAnswer": options.index(correct),
+        "explanation": f'النص الكامل: «{text}»',
+    }
+
+def _make_which_hadith_q(hadith: Dict, all_hadiths: List[Dict]) -> Optional[Dict]:
+    """من أي حديث هذا المقطع؟"""
+    text = hadith.get("arabic_hadith_text_plain", "").strip().strip('"')
+    if not text:
+        return None
+    words = text.split()
+    if len(words) < 5:
+        return None
+    # أخذ مقطع من المنتصف
+    mid = len(words) // 3
+    snippet = " ".join(words[mid:mid+6])
+    correct = hadith.get("title", "")
+    pool = [h.get("title", "") for h in all_hadiths if h["id"] != hadith["id"]]
+    options = _build_options(correct, pool)
+    if not options:
+        return None
+    return {
+        "question": f'من أي حديث هذا المقطع؟\n«...{snippet}...»',
+        "options": options,
+        "correctAnswer": options.index(correct),
+        "explanation": f'هذا مقطع من حديث «{correct}».',
+    }
+
+def _make_vocabulary_q(hadith: Dict, all_hadiths: List[Dict]) -> Optional[Dict]:
+    """معاني المفردات"""
+    vocab = hadith.get("vocabulary", [])
+    if not vocab:
+        return None
+    entry = random.choice(vocab)
+    # الشكل: "الكلمة: المعنى"
+    if ":" not in entry:
+        return None
+    parts = entry.split(":", 1)
+    word = parts[0].strip()
+    correct = parts[1].strip()
+    # خيارات من معاني كلمات أخرى
+    pool = []
+    for h in all_hadiths:
+        for v in h.get("vocabulary", []):
+            if ":" in v:
+                p = v.split(":", 1)
+                meaning = p[1].strip()
+                if meaning != correct and p[0].strip() != word:
+                    pool.append(meaning)
+    options = _build_options(correct, pool)
+    if not options:
+        return None
+    return {
+        "question": f'ما معنى كلمة «{word}» في قول النبي ﷺ؟',
+        "hadith_text": hadith.get("arabic_hadith_text_plain", ""),
+        "options": options,
+        "correctAnswer": options.index(correct),
+        "explanation": f'«{word}»: {correct}',
+    }
+
+def _make_benefit_q(hadith: Dict, all_hadiths: List[Dict]) -> Optional[Dict]:
+    """فوائد الأحاديث"""
+    benefits = hadith.get("benefits", [])
+    if not benefits:
+        return None
+    correct = random.choice(benefits)
+    pool = []
+    for h in all_hadiths:
+        for b in h.get("benefits", []):
+            if b != correct:
+                pool.append(b)
+    options = _build_options(correct, pool)
+    if not options:
+        return None
+    return {
+        "question": f'ما إحدى فوائد حديث «{hadith.get("title", "")}»؟',
+        "options": options,
+        "correctAnswer": options.index(correct),
+        "explanation": f'من فوائد هذا الحديث: {correct}',
+    }
+
+def _make_topic_q(hadith: Dict, all_hadiths: List[Dict]) -> Optional[Dict]:
+    """تصنيف الأحاديث"""
+    correct = (hadith.get("topics") or {}).get("category_arabic", "")
+    if not correct:
+        return None
+    pool = list(set(
+        (h.get("topics") or {}).get("category_arabic", "")
+        for h in all_hadiths
+        if (h.get("topics") or {}).get("category_arabic") and h["id"] != hadith["id"]
+    ))
+    options = _build_options(correct, pool)
+    if not options:
+        return None
+    return {
+        "question": f'ما التصنيف الرئيسي لحديث «{hadith.get("title", "")}»؟',
+        "hadith_text": hadith.get("arabic_hadith_text_plain", ""),
+        "options": options,
+        "correctAnswer": options.index(correct),
+        "explanation": f'حديث «{hadith.get("title", "")}» يندرج تحت تصنيف: {correct}',
+    }
+
+def _make_source_q(hadith: Dict, all_hadiths: List[Dict]) -> Optional[Dict]:
+    """مصادر الأحاديث"""
+    books = _get_source_books(hadith)
+    if not books:
+        return None
+    correct = books[0]
+    pool = list(set(
+        b for h in all_hadiths
+        for b in _get_source_books(h)
+        if b != correct
+    ))
+    options = _build_options(correct, pool)
+    if not options:
+        return None
+    src = hadith.get("source_dict") or {}
+    grade = src.get("grade_arabic", "")
+    return {
+        "question": f'في أي كتاب ورد حديث «{hadith.get("title", "")}»?',
+        "options": options,
+        "correctAnswer": options.index(correct),
+        "explanation": f'رواه {correct}. درجته: {grade}',
+    }
+
+def _make_narrator_tribe_q(hadith: Dict, all_hadiths: List[Dict]) -> Optional[Dict]:
+    """قبائل الرواة"""
+    correct = _get_narrator_field(hadith, "tribe_arabic", "")
+    narrator = _get_narrator_field(hadith, "arabic", "الراوي")
+    if not correct:
+        return None
+    pool = list(set(
+        _get_narrator_field(h, "tribe_arabic")
+        for h in all_hadiths
+        if _get_narrator_field(h, "tribe_arabic") and _get_narrator_field(h, "tribe_arabic") != correct
+    ))
+    options = _build_options(correct, pool)
+    if not options:
+        return None
+    return {
+        "question": f'من أي قبيلة ينتسب {narrator} راوي حديث «{hadith.get("title", "")}»؟',
+        "options": options,
+        "correctAnswer": options.index(correct),
+        "explanation": f'{narrator} ينتسب إلى قبيلة {correct}.',
+    }
+
+def _make_narrator_died_q(hadith: Dict, all_hadiths: List[Dict]) -> Optional[Dict]:
+    """تاريخ وفاة الراوي"""
+    died = _get_narrator_field(hadith, "died_ah", None)
+    narrator = _get_narrator_field(hadith, "arabic", "الراوي")
+    if died is None:
+        return None
+    correct = f"{died} هـ"
+    pool = list(set(
+        f"{_get_narrator_field(h, 'died_ah')} هـ"
+        for h in all_hadiths
+        if _get_narrator_field(h, 'died_ah') and _get_narrator_field(h, 'died_ah') != died
+    ))
+    options = _build_options(correct, pool)
+    if not options:
+        return None
+    return {
+        "question": f'متى توفي {narrator} راوي حديث «{hadith.get("title", "")}»؟',
+        "options": options,
+        "correctAnswer": options.index(correct),
+        "explanation": f'توفي {narrator} سنة {correct}.',
+    }
+
+def _make_narrations_count_q(hadith: Dict, all_hadiths: List[Dict]) -> Optional[Dict]:
+    """عدد روايات الصحابي"""
+    count = _get_narrator_field(hadith, "narrations_count", None)
+    narrator = _get_narrator_field(hadith, "arabic", "الراوي")
+    if count is None:
+        return None
+    correct = f"{int(str(count).split()[0].replace(",","")):,} حديث"
+    pool = list(set(
+        f"{int(str(_get_narrator_field(h, 'narrations_count') or 0).split()[0].replace(",","")):,} حديث"
+        for h in all_hadiths
+        if _get_narrator_field(h, 'narrations_count') and _get_narrator_field(h, 'narrations_count') != count
+    ))
+    options = _build_options(correct, pool)
+    if not options:
+        return None
+    return {
+        "question": f'كم عدد روايات {narrator} في كتب السنة؟',
+        "options": options,
+        "correctAnswer": options.index(correct),
+        "explanation": f'روى {narrator} ما مجموعه {correct} في كتب السنة النبوية.',
+    }
+
+def _make_speed_q(hadith: Dict, all_hadiths: List[Dict]) -> Optional[Dict]:
+    """سؤال سريع متنوع للسباق ضد الوقت"""
+    makers = [_make_narrator_q, _make_which_hadith_q, _make_source_q, _make_topic_q]
+    random.shuffle(makers)
+    for maker in makers:
+        q = maker(hadith, all_hadiths)
+        if q:
+            return q
+    return None
+
+def generate_quiz_questions(quiz_type: str):
+    """توليد أسئلة حقيقية لكل نوع اختبار"""
+
+    # ── تحديد الأحاديث والعنوان والوقت ──
+    CONFIG = {
+        "narrator":          ("من الراوي؟",                  10, 8,  _make_narrator_q),
+        "complete":          ("أكمل الحديث",                 10, 10, _make_complete_q),
+        "which-hadith":      ("من أي حديث؟",                 10, 10, _make_which_hadith_q),
+        "vocabulary":        ("معاني المفردات",               10, 8,  _make_vocabulary_q),
+        "benefit":           ("فوائد الأحاديث",               10, 8,  _make_benefit_q),
+        "topic":             ("تصنيف الأحاديث",               10, 8,  _make_topic_q),
+        "source":            ("مصادر الأحاديث",               10, 8,  _make_source_q),
+        "narrator-tribe":    ("قبائل الرواة",                 10, 8,  _make_narrator_tribe_q),
+        "narrator-died":     ("تاريخ وفاة الراوي",            10, 8,  _make_narrator_died_q),
+        "narrations-count":  ("عدد الروايات",                 10, 8,  _make_narrations_count_q),
+        "speed":             ("السباق ضد الوقت ⚡",           10, 1,  _make_speed_q),
+        "random-20":         ("الاختبار الشامل 🎲",           20, 10, None),
+        "first-10":          ("اختبار الأحاديث العشرة الأولى", 10, 5, None),
+    }
+
+    if quiz_type not in CONFIG:
+        quiz_type = "narrator"
+
+    quiz_title, target_count, time_limit, maker = CONFIG[quiz_type]
+
+    # ── اختيار مجموعة الأحاديث ──
+    if quiz_type == "first-10":
+        pool = HADITHS_DATA[:10]
+    elif quiz_type == "random-20":
+        pool = random.sample(HADITHS_DATA, min(20, len(HADITHS_DATA)))
+    else:
+        pool = list(HADITHS_DATA)
+        random.shuffle(pool)
+
+    # ── توليد الأسئلة ──
     questions = []
-    for hadith in hadiths:
-        available_narrators = list({h["narrator"] for h in HADITHS_DATA if h["id"] != hadith["id"] and h["narrator"] != hadith["narrator"]})
-        if len(available_narrators) < 3:
-            continue
-        wrong = random.sample(available_narrators, 3)
-        options = wrong + [hadith["narrator"]]
-        random.shuffle(options)
-        questions.append({
-            "question": f'من راوي حديث "{hadith["title"]}"؟',
-            "options": options,
-            "correctAnswer": options.index(hadith["narrator"]),
-            "explanation": f'الراوي هو {hadith["narrator"]}',
-        })
+
+    if quiz_type in ("random-20", "first-10"):
+        # مزيج من كل الأنواع
+        all_makers = [
+            _make_narrator_q, _make_complete_q, _make_which_hadith_q,
+            _make_vocabulary_q, _make_benefit_q, _make_topic_q,
+            _make_source_q, _make_narrator_tribe_q,
+        ]
+        for hadith in pool:
+            if len(questions) >= target_count:
+                break
+            mk = random.choice(all_makers)
+            q = mk(hadith, HADITHS_DATA)
+            if q:
+                questions.append(q)
+    else:
+        for hadith in pool:
+            if len(questions) >= target_count:
+                break
+            q = maker(hadith, HADITHS_DATA)
+            if q:
+                questions.append(q)
 
     random.shuffle(questions)
     return questions, quiz_title, time_limit
 
+
+
+
+# ============================================
+# صفحة الرواة
+# ============================================
+@app.get("/narrators")
+@limiter.limit(f"{settings.rate_limit_per_minute}/minute")
+async def narrators_page(request: Request):
+    try:
+        # جمع الرواة مع بياناتهم الكاملة
+        seen = {}
+        for h in HADITHS_DATA:
+            raw = h.get("_raw_narrator") or {}
+            name = h.get("narrator", "")
+            if name and name not in seen:
+                seen[name] = {
+                    "name": name,
+                    "hadith_count": 0,
+                    "first_hadith_id": h["id"],
+                    "info": raw if isinstance(raw, dict) else {}
+                }
+            if name in seen:
+                seen[name]["hadith_count"] += 1
+
+        narrators = sorted(seen.values(), key=lambda x: x["first_hadith_id"])
+        return templates.TemplateResponse("narrators.html", {
+            "request": request,
+            "narrators": narrators,
+            "total": len(narrators),
+            "settings": settings,
+        })
+    except Exception as e:
+        logger.error(f"❌ خطأ في صفحة الرواة: {e}")
+        raise HTTPException(status_code=500, detail="خطأ في تحميل الصفحة")
+
+
+@app.get("/narrator/{narrator_name}")
+@limiter.limit(f"{settings.rate_limit_per_minute}/minute")
+async def narrator_detail_page(request: Request, narrator_name: str):
+    try:
+        from urllib.parse import unquote
+        narrator_name = unquote(narrator_name)
+        hadiths = [h for h in HADITHS_DATA if h.get("narrator", "") == narrator_name]
+        if not hadiths:
+            raise HTTPException(status_code=404, detail="الراوي غير موجود")
+
+        # استخراج بيانات الراوي الكاملة من أول حديث
+        first = hadiths[0]
+        narrator_info = first.get("_raw_narrator") or {}
+
+        return templates.TemplateResponse("narrator_detail.html", {
+            "request": request,
+            "narrator_name": narrator_name,
+            "narrator_info": narrator_info if isinstance(narrator_info, dict) else {},
+            "hadiths": hadiths,
+            "settings": settings,
+        })
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ خطأ في صفحة الراوي: {e}")
+        raise HTTPException(status_code=500, detail="خطأ في تحميل الصفحة")
+
+
+# ============================================
+# API: مشاركة الحديث كصورة (بيانات JSON)
+# ============================================
+@app.get("/api/hadith/{hadith_id}/share-data")
+async def hadith_share_data(request: Request, hadith_id: int):
+    hadith = get_hadith_by_id(hadith_id)
+    if not hadith:
+        raise HTTPException(status_code=404)
+    return {
+        "id": hadith["id"],
+        "title": hadith.get("title", ""),
+        "text": hadith.get("text", ""),
+        "narrator": hadith.get("narrator", ""),
+        "source": hadith.get("source", ""),
+    }
 
 @app.get("/comments")
 @limiter.limit(f"{settings.rate_limit_per_minute}/minute")

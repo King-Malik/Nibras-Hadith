@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block title %}{{ narrator_name }} — {{ settings.app_name }}{% endblock %}
+{% block og_title %}{{ narrator_name }} — رواة الأربعين النووية{% endblock %}
+{% block og_description %}{{ narrator_info.bio_arabic or narrator_name }} — {{ hadiths|length }} حديث في الأربعين النووية{% endblock %}
+{% block canonical %}{{ settings.site_url }}/narrator/{{ narrator_name | urlencode }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.narrator-detail-page { max-width: 900px; margin: 0 auto; padding: clamp(24px,6vw,48px) clamp(16px,4vw,24px); }
+
+.back-link {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: var(--color-text-secondary); text-decoration: none;
+    font-size: 14px; margin-bottom: 28px;
+    transition: color 0.2s;
+}
+.back-link:hover { color: var(--color-primary); }
+
+/* بطاقة الراوي الرئيسية */
+.narrator-hero {
+    background: linear-gradient(135deg, var(--color-primary-soft), transparent);
+    border: 1px solid var(--color-border);
+    border-radius: 20px;
+    padding: clamp(24px,5vw,40px);
+    margin-bottom: 32px;
+    display: flex; gap: 24px; flex-wrap: wrap; align-items: flex-start;
+    animation: fadeIn 0.5s ease;
+}
+.hero-avatar {
+    width: 80px; height: 80px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 30px; font-weight: 800; color: white; flex-shrink: 0;
+}
+.hero-info { flex: 1; min-width: 200px; }
+.hero-name {
+    font-size: clamp(22px,5vw,30px); font-weight: 800;
+    color: var(--color-text-primary); margin-bottom: 4px;
+}
+.hero-kunya { color: var(--color-primary); font-weight: 600; font-size: 15px; margin-bottom: 6px; }
+.hero-title { color: var(--color-text-secondary); font-size: 14px; margin-bottom: 16px; }
+
+.hero-stats {
+    display: flex; flex-wrap: wrap; gap: 10px;
+}
+.stat-pill {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    padding: 6px 14px; font-size: 13px;
+    color: var(--color-text-secondary);
+    display: flex; align-items: center; gap: 6px;
+}
+.stat-pill .material-icons-outlined { font-size: 15px; color: var(--color-primary); }
+.paradise-pill {
+    background: rgba(251,191,36,0.12);
+    border-color: rgba(251,191,36,0.3);
+    color: #d97706;
+}
+
+/* السيرة */
+.bio-section {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 28px;
+}
+.bio-section h3 {
+    font-size: 16px; font-weight: 700;
+    color: var(--color-primary);
+    margin-bottom: 14px;
+    display: flex; align-items: center; gap: 8px;
+}
+.bio-text {
+    font-size: 15px; line-height: 1.85;
+    color: var(--color-text-secondary);
+}
+
+/* الأحاديث */
+.hadiths-section h2 {
+    font-size: clamp(18px,4vw,22px); font-weight: 700;
+    color: var(--color-text-primary); margin-bottom: 20px;
+    display: flex; align-items: center; gap: 10px;
+}
+.count-badge {
+    background: var(--color-primary-soft); color: var(--color-primary);
+    border-radius: 999px; padding: 3px 12px; font-size: 13px; font-weight: 600;
+}
+
+.hadith-mini {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: 14px;
+    padding: 20px;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    margin-bottom: 14px;
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+.hadith-mini:hover {
+    transform: translateX(-4px);
+    border-color: var(--color-primary);
+    box-shadow: 0 4px 16px var(--color-shadow);
+}
+.hadith-mini-num {
+    font-size: 11px; font-weight: 700; color: var(--color-primary);
+    background: var(--color-primary-soft);
+    border-radius: 6px; padding: 2px 8px;
+    display: inline-block; margin-bottom: 10px;
+}
+.hadith-mini-title {
+    font-size: 16px; font-weight: 700; color: var(--color-text-primary);
+    margin-bottom: 8px;
+}
+.hadith-mini-text {
+    font-size: 13px; color: var(--color-text-secondary); line-height: 1.7;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="narrator-detail-page">
+    <a href="/narrators" class="back-link">
+        <span class="material-icons-outlined">arrow_forward</span>
+        جميع الرواة
+    </a>
+
+    <!-- بطاقة الراوي -->
+    <div class="narrator-hero">
+        <div class="hero-avatar">{{ narrator_name[0] if narrator_name else '؟' }}</div>
+        <div class="hero-info">
+            <div class="hero-name">{{ narrator_info.full_name_arabic or narrator_name }}</div>
+            {% if narrator_info.kunya_arabic %}
+            <div class="hero-kunya">{{ narrator_info.kunya_arabic }}</div>
+            {% endif %}
+            {% if narrator_info.title_arabic %}
+            <div class="hero-title">{{ narrator_info.title_arabic }}</div>
+            {% endif %}
+            <div class="hero-stats">
+                <span class="stat-pill">
+                    <span class="material-icons-outlined">menu_book</span>
+                    {{ hadiths|length }} حديث في الأربعين
+                </span>
+                {% if narrator_info.narrations_count %}
+                <span class="stat-pill">
+                    <span class="material-icons-outlined">format_list_numbered</span>
+                    {{ narrator_info.narrations_count }} رواية
+                </span>
+                {% endif %}
+                {% if narrator_info.died_ah %}
+                <span class="stat-pill">
+                    <span class="material-icons-outlined">history</span>
+                    توفي {{ narrator_info.died_ah }}هـ
+                    {% if narrator_info.died_ce %}/ {{ narrator_info.died_ce }}م{% endif %}
+                </span>
+                {% endif %}
+                {% if narrator_info.tribe_arabic %}
+                <span class="stat-pill">
+                    <span class="material-icons-outlined">people</span>
+                    {{ narrator_info.tribe_arabic }}
+                </span>
+                {% endif %}
+                {% if narrator_info.is_ten_promised_paradise %}
+                <span class="stat-pill paradise-pill">✨ من العشرة المبشرين بالجنة</span>
+                {% endif %}
+                {% if narrator_info.is_companion %}
+                <span class="stat-pill">🌟 صحابي جليل</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- السيرة -->
+    {% if narrator_info.bio_arabic %}
+    <div class="bio-section">
+        <h3>
+            <span class="material-icons-outlined">person</span>
+            نبذة مختصرة
+        </h3>
+        <p class="bio-text">{{ narrator_info.bio_arabic }}</p>
+    </div>
+    {% endif %}
+
+    <!-- أحاديثه -->
+    <div class="hadiths-section">
+        <h2>
+            <span class="material-icons-outlined">menu_book</span>
+            أحاديثه في الأربعين
+            <span class="count-badge">{{ hadiths|length }}</span>
+        </h2>
+        {% for h in hadiths %}
+        <a href="/hadith/{{ h.id }}" class="hadith-mini">
+            <div class="hadith-mini-num">الحديث {{ h.id }}</div>
+            <div class="hadith-mini-title">{{ h.title }}</div>
+            <div class="hadith-mini-text">{{ h.text[:200] }}</div>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

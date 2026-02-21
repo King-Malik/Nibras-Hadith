@@ -527,6 +527,106 @@
         from { opacity: 0; transform: translateY(20px); }
         to { opacity: 1; transform: translateY(0); }
     }
+
+    /* ── وضع القراءة المركّز ───────────────── */
+    body.reading-mode .navbar,
+    body.reading-mode .breadcrumb,
+    body.reading-mode .hadith-navigation,
+    body.reading-mode .hadith-extra-sections,
+    body.reading-mode .comments-section,
+    body.reading-mode footer,
+    body.reading-mode .detail-container > *:not(.hadith-content) {
+        display: none !important;
+    }
+    body.reading-mode .detail-container {
+        max-width: 720px;
+        padding: clamp(32px,8vw,80px) clamp(24px,6vw,48px);
+    }
+    body.reading-mode .hadith-content {
+        border: none;
+        box-shadow: none;
+        padding: 0;
+        background: transparent;
+    }
+    body.reading-mode .hadith-text {
+        font-size: clamp(20px,4vw,26px);
+        line-height: 2.2;
+    }
+    body.reading-mode .actions {
+        display: flex !important;
+    }
+    .reading-mode-exit {
+        display: none;
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--color-primary);
+        color: white;
+        border: none;
+        border-radius: 999px;
+        padding: 12px 28px;
+        font-size: 15px;
+        font-family: var(--font-family);
+        cursor: pointer;
+        box-shadow: 0 4px 20px rgba(16,185,129,0.4);
+        z-index: 1000;
+        transition: transform 0.2s;
+    }
+    .reading-mode-exit:hover { transform: translateX(-50%) scale(1.04); }
+    body.reading-mode .reading-mode-exit { display: block; }
+
+
+    /* ── وضع القراءة المركّز ───────────────── */
+    body.reading-mode .navbar,
+    body.reading-mode .breadcrumb,
+    body.reading-mode .hadith-navigation,
+    body.reading-mode .hadith-extra-sections,
+    body.reading-mode .comments-section,
+    body.reading-mode footer,
+    body.reading-mode .detail-container > *:not(.hadith-content) {
+        display: none !important;
+    }
+    body.reading-mode .detail-container {
+        max-width: 720px;
+        padding: clamp(32px,8vw,80px) clamp(24px,6vw,48px);
+    }
+    body.reading-mode .hadith-content {
+        border: none;
+        box-shadow: none;
+        padding: 0;
+        background: transparent;
+    }
+    body.reading-mode .hadith-text {
+        font-size: clamp(20px,4vw,26px);
+        line-height: 2.2;
+    }
+    body.reading-mode .actions {
+        display: flex !important;
+    }
+    .reading-mode-exit {
+        display: none;
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--color-primary);
+        color: white;
+        border: none;
+        border-radius: 999px;
+        padding: 12px 28px;
+        font-size: 15px;
+        font-family: var(--font-family);
+        cursor: pointer;
+        box-shadow: 0 4px 20px rgba(16,185,129,0.4);
+        z-index: 1000;
+        transition: transform 0.2s;
+    }
+    .reading-mode-exit:hover { transform: translateX(-50%) scale(1.04); }
+    body.reading-mode .reading-mode-exit { display: block; }
+
+
+
 </style>
 {% endblock %}
 
@@ -617,6 +717,10 @@
                 <span class="material-icons-outlined" id="save-icon">bookmark_border</span>
                 <span id="save-text">حفظ</span>
             </button>
+            <button class="action-btn" onclick="toggleReadingMode()" id="reading-mode-btn" title="وضع القراءة المركّز">
+                <span class="material-icons-outlined">chrome_reader_mode</span>
+                <span>تركيز</span>
+            </button>
         </div>
     </div>
 
@@ -699,6 +803,12 @@
             </div>
     </div>
 </div>
+
+<!-- زر الخروج من وضع القراءة -->
+<button class="reading-mode-exit" onclick="toggleReadingMode()">
+    <span class="material-icons-outlined" style="font-size:18px;vertical-align:middle">close</span>
+    خروج من وضع التركيز
+</button>
 
 <script>
     const HADITH_ID = {{ hadith.id }};
@@ -788,5 +898,23 @@ ${HADITH_TEXT}
         // تحميل التعليقات الخاصة بهذا الحديث
         loadComments(HADITH_ID, 'comments-list');
     });
+
+    // ══════════════════════════════════════════════
+    // وضع القراءة المركّز
+    // ══════════════════════════════════════════════
+    function toggleReadingMode() {
+        document.body.classList.toggle('reading-mode');
+        const isOn = document.body.classList.contains('reading-mode');
+        const btn = document.getElementById('reading-mode-btn');
+        if (btn) {
+            btn.style.borderColor = isOn ? 'var(--color-primary)' : '';
+            btn.style.color       = isOn ? 'var(--color-primary)' : '';
+        }
+        if (isOn) {
+            toastManager.show('وضع التركيز مفعّل — اضغط "خروج" للعودة', 'success');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }
+
 </script>
 {% endblock %}
